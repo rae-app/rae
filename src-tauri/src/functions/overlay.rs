@@ -1,7 +1,12 @@
 use crate::utils::{smooth_move, smooth_resize};
 use enigo::{Enigo, MouseControllable};
+use window_vibrancy::{apply_acrylic, clear_acrylic, clear_blur};
 use std::sync::atomic::{AtomicBool, Ordering};
-use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{
+    utils::config::WindowEffectsConfig,
+    window::{Effect, EffectsBuilder},
+    AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder,
+};
 
 // Import stealth functions
 use super::stealth::apply_stealth_mode_to_window;
@@ -30,6 +35,10 @@ pub fn follow_magic_dot(app: AppHandle) {
 #[tauri::command]
 pub fn pin_magic_dot(app: AppHandle) {
     if let Some(window) = app.get_webview_window("overlay") {
+        println!("Pinning magic dot");
+        // clear_blur(&window);
+        // clear_acrylic(&window);
+        
         if let (Ok(current_pos), Ok(current_size), Ok(Some(monitor))) = (
             window.outer_position(),
             window.outer_size(),
@@ -191,6 +200,12 @@ pub fn toggle_magic_dot(app: AppHandle) {
         .shadow(false)
         .always_on_top(true)
         .inner_size(500.0, 60.0)
+        .effects(WindowEffectsConfig {
+            effects: vec![Effect::Acrylic],
+            state: None,
+            radius: None,
+            color: None, // Optional: affects blur & acrylic on Windows 10 v1903+
+        })
         .build()
         .and_then(|w| {
             let _ = w.show();
@@ -234,6 +249,7 @@ impl NotchWatcher {
                     && y < notch_y + NOTCH_HEIGHT
                 {
                     let _ = window.set_ignore_cursor_events(false);
+                    apply_acrylic(&window, Some((18, 18, 18, 125)));
                     // println!("Mouse hovered over notch");
                     let _ = window.emit("notch-hover", ());
                 }
@@ -252,6 +268,7 @@ pub fn start_notch_watcher(app: AppHandle) {
 pub fn enable_notch(app: AppHandle) {
     if let Some(window) = app.get_webview_window("overlay") {
         // println!("Enabling notch");
+        clear_acrylic(&window);
         let _ = window.set_ignore_cursor_events(true);
     }
 }
@@ -298,6 +315,12 @@ pub fn show_magic_dot(app: AppHandle) {
         .shadow(false)
         .always_on_top(true)
         .inner_size(500.0, 60.0)
+        .effects(WindowEffectsConfig {
+            effects: vec![Effect::Acrylic],
+            state: None,
+            radius: None,
+            color: None, // Optional: affects blur & acrylic on Windows 10 v1903+
+        })
         .build()
         .and_then(|w| {
             let _ = w.show();

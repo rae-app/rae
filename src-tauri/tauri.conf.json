@@ -22,7 +22,13 @@
         "alwaysOnTop": false,
         "decorations": false,
         "shadow": false,
-        "maximizable": false
+        "maximizable": false,
+        "windowEffects" :{
+          "effects": [
+            "acrylic"
+          ]
+        }
+        
       }
     ],
     "security": {
