@@ -4,7 +4,16 @@
   It is used to display the sidebar.
 */
 }
-import {ChatIcon, GearSixIcon, HouseIcon, BrainIcon, SparkleIcon} from "@phosphor-icons/react"
+import {
+  ChatIcon,
+  GearSixIcon,
+  HouseIcon,
+  BrainIcon,
+  SparkleIcon,
+  NotePencilIcon,
+  PencilIcon,
+  CaretDoubleLeftIcon,
+} from "@phosphor-icons/react";
 import { MAGIC_DOT_TOGGLE_COMBO } from "@/constants/shortcuts";
 import { useUserStore } from "@/store/userStore";
 import { invoke } from "@tauri-apps/api/core";
@@ -17,8 +26,6 @@ import {
   Settings,
   Sparkle,
   User,
- 
-  
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { ReactNode, useEffect, useState } from "react";
@@ -26,61 +33,40 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 const SidebarButton = ({
   children,
-  to,
+  onClick,
+  expanded = false,
+  active= false,
+  logo,
 }: {
   children: ReactNode;
-  to: string;
+  onClick: () => void;
+  expanded?: boolean;
+  logo: ReactNode;
+  active?: boolean;
 }) => {
-  const location = useLocation();
-  const [active, setActive] = useState(false);
-  const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    console.log(
-      "Checking active for",
-      to,
-      "current path:",
-      location.pathname.split("/")[2]
-    );
-    if (location.pathname.split("/")[2] == to) {
-      console.log("Setting active for", to);
-      setLoading(false);
-      setActive(true);
-    } else {
-      setActive(false);
-    }
-  }, [location]);
-  const navigate = useNavigate();
   return (
-    <motion.div
-      onClick={() => {
-        setLoading(true);
-        navigate(`/app/${to}`);
+    <motion.button
+    whileHover={"hover"}
+      animate={{
+        paddingInline: expanded ? "0px" : "0px",
+        fontSize: expanded ? "14px" : "14px",
+        // paddingBlock: expanded ? "20px" : "0px",
       }}
-      className="px-[4px]   py-[2px] group text-foreground"
+      onClick={onClick}
+      className={`w-full group h-[44px]  flex items-center overflow-hidden rounded-lg dark:bg-zinc-900/50 cursor-pointer dark:hover:text-white ${active && "dark:!bg-zinc-800 dark:!text-white"} dark:hover:bg-zinc-800 transition-colors flex-nowrap whitespace-nowrap dark:text-zinc-400 font-medium duration-100`}
     >
-      <motion.button
-        className={`flex rounded-md size-[42px]  relative  items-center justify-center  shrink-0 overflow-hidden  border-transparent  ${active && "!border-surface/0"} ${
-          loading ? "bg-border" : "bg-background group-hover:bg-border "
-        }`}
+      <motion.div
+        animate={{
+          fontSize: expanded ? "14px" : "20px",
+        }}
+        className="h-full aspect-square flex items-center justify-center shrink-0"
       >
-        <div className={`z-20 ${active ? "dark:text-white text-black" : "text-foreground/40 dark:group-hover:text-white transition-all group-hover:text-black"}`}>{children}</div>
-        <AnimatePresence>
-          {active && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{duration: 0.2}}
-                className="z-10 size-full absolute left-0 top-0  dark:bg-zinc-800 bg-surface/60  flex items-center justify-center "
-              >
-               
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-      </motion.button>
-    </motion.div>
+        {logo}
+      </motion.div>
+      <motion.div animate={{ opacity: !expanded == true ? 0 : 1 }}>
+        {children}
+      </motion.div>
+    </motion.button>
   );
 };
 
@@ -105,35 +91,109 @@ const Sidebar = () => {
     }
     navigate("/");
   };
+  const { name, email } = useUserStore();
+  const [expanded, setExpanded] = useState(true);
   return (
-    <div className="w-fit bg-background  py-[2px] shrink-0 h-full  flex flex-col overflow-y-auto ">
-      <SidebarButton to="landing">
-        <HouseIcon weight="bold" />
-      </SidebarButton>
-      <SidebarButton to="chat">
-        <ChatIcon weight="bold"  />
-      </SidebarButton>
-      {/* <SidebarButton to="agents">
-        <SparkleIcon weight="bold"  />
-      </SidebarButton> */}
-      <SidebarButton to="brain">
-        <BrainIcon weight="bold" />
-      </SidebarButton>
-      <SidebarButton to="settings">
-        <GearSixIcon weight="bold" />
-      </SidebarButton>
-      <div className="mt-auto flex flex-col gap-1 p-1">
-        <button className="flex rounded-md w-full text-foreground hover:bg-border items-center justify-center aspect-square shrink-0">
-          <User size={16} />
-        </button>
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          className="flex text-foreground rounded-md w-full hover:bg-border items-center justify-center aspect-square shrink-0"
+    <motion.div
+      animate={{
+        width: expanded ? "300px" : "60px",
+      }}
+      transition={{ ease: "circInOut", duration: 0.3 }}
+      className="border-r  border-border text-foreground overflow-hidden bg-background  py-[2px] shrink-0 h-full  flex flex-col overflow-y-auto "
+    >
+      <div className="w-full h-[60px] flex p-2 justify-end">
+        <button
+          onClick={() => setExpanded((prev) => !prev)}
+          className="h-full shrink-0 aspect-square flex items-center justify-center dark:hover:bg-zinc-800 dark:text-zinc-400 hover:dark:text-white  transition-colors duration-100 rounded-lg dark:bg-zinc-900/50"
         >
-          <LogOut size={16} onClick={handlelogout} />
-        </motion.button>
+          <AnimatePresence>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, rotateZ: !expanded ? 180 : 0 }}
+              transition={{ ease: "circInOut", duration: 0.2 }}
+            >
+              <CaretDoubleLeftIcon />
+            </motion.div>
+          </AnimatePresence>
+        </button>
       </div>
-    </div>
+      <div className="flex flex-col gap-2 px-2">
+        <SidebarButton
+          logo={
+            <motion.div
+              variants={{
+                hover: {
+                  rotate: "45deg",
+                },
+              }}
+              transition={{duration: 0.2, ease: "easeInOut", type: "tween"}}
+              className=""
+            >
+              <PencilIcon className="" />
+            </motion.div>
+          }
+          expanded={expanded}
+          active={location.pathname == "/app/landing"}
+          onClick={() => navigate("/app/landing")}
+        >
+          New Chat
+        </SidebarButton>
+      </div>
+      <div className="mt-auto flex flex-col gap-2 px-2">
+        <SidebarButton
+        active={location.pathname == "/app/brain"}
+          logo={
+            <BrainIcon className=" " />
+          }
+          expanded={expanded}
+          onClick={() => {
+            navigate("/app/brain")
+            // setExpanded(false)
+          }}
+        >
+          Memory
+        </SidebarButton>
+        <SidebarButton
+        active={location.pathname == "/app/settings"}
+          logo={
+            <motion.div
+              variants={{
+                hover: {
+                  rotate: "45deg",
+                },
+              }}
+              transition={{duration: 0.2, ease: "easeInOut", type: "tween"}}
+              className=""
+            >
+              <GearSixIcon className="" />
+            </motion.div>
+          }
+          expanded={expanded}
+          onClick={() => {
+            // setExpanded(false)
+            navigate("/app/settings")
+          }}
+        >
+          Settings
+        </SidebarButton>
+      </div>
+      <motion.div
+        animate={{ height: expanded ? "80px" : "60px" }}
+        className="w-full p-2"
+      >
+        <div className="rounded-lg overflow-hidden w-full h-full p-2 flex  dark:bg-zinc-900/50 dark:text-white gap-2">
+          <div className="h-full aspect-square shrink-0 rounded-full bg-surface"></div>
+          <div className="h-full flex flex-col">
+            <div className="text-sm font-medium dark:text-zinc-200 ">
+              {name}
+            </div>
+            <div className="text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-white to-transparent">
+              {email}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

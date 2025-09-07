@@ -29,7 +29,7 @@ export default function Titlebar() {
   
 
   return (
-    <div className="drag shrink-0 z-[1000] flex h-[36px] items-center justify-between p-0 bg-background text-foreground">
+    <div className="drag border-b border-border shrink-0 z-[1000] flex h-[36px] items-center justify-between p-0 bg-background text-foreground">
       <div className="flex items-center gap-2 h-full ">
         <div className="h-full shrink-0 flex items-center justify-center relative ml-2" >
           <img src={logo} className="h-full aspect-square object-contain size-2/4" ></img>
