@@ -202,6 +202,18 @@ pub fn center_overlay_bar(app: AppHandle) {
 }
 
 #[tauri::command]
+pub fn toggle_pin_overlay(app: AppHandle) {
+    if let Some(window) = app.get_webview_window("overlay") {
+        println!("toggle_pin_overlay: Toggling pin state");
+        // Emit event to frontend to toggle pin state
+        let _ = window.emit("toggle_pin_state", ());
+        println!("toggle_pin_overlay: Emitted toggle_pin_state event");
+    } else {
+        println!("toggle_pin_overlay: Could not find overlay window");
+    }
+}
+
+#[tauri::command]
 pub fn close_magic_dot(app: AppHandle) {
     if let Some(window) = app.get_webview_window("overlay") {
         let _ = window.close();

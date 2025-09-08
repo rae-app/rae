@@ -369,6 +369,11 @@ const Overlay = () => {
         const gradient = event.payload as { gradient: boolean };
         console.log("OverlayCard: Setting showGradient to:", gradient.gradient);
         setShowGradient(gradient.gradient);
+      }),
+
+      listen("toggle_pin_state", () => {
+        console.log("OverlayCard: Received toggle_pin_state event");
+        handlePinClick();
       })
     ];
 

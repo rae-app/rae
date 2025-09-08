@@ -28,6 +28,11 @@ export const shortcuts : Shortcut[] = [
         description: "Move overlay bar to center of screen"
     },
     {
+        combo: ["Ctrl", "P"],
+        title: "Toggle pin mode",
+        description: "Pin or unpin the overlay bar"
+    },
+    {
         combo: ["Ctrl", "Shift", "Enter"],
         title: "Open chat",
         description: "Open the chat in the overlay window"
