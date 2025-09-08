@@ -168,7 +168,7 @@ const Chat: React.FC<ChatProps> = ({
     <div className="absolute pointer-events-none size-full flex flex-col gap-4 items-center justify-center left-0 top-0 z-40 text-foreground">
       <motion.div
         initial={{ bottom: "35%", opacity: 0 }}
-        animate={{ bottom: init ? "0%" : "40%", opacity: 1 }}
+        animate={{ bottom: init ? "0%" : "30%", opacity: 1 }}
         className="flex flex-col absolute  w-full  p-2 gap-4 justify-center items-center"
       >
         {!init && (
