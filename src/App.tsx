@@ -85,6 +85,46 @@ function App() {
     };
   }, []);
 
+  // Register Ctrl+M shortcut to center overlay bar
+  useEffect(() => {
+    const combo = "Ctrl+M";
+    const cooldownMs = 300;
+    let lastFired = 0;
+    const setup = async () => {
+      try {
+        try {
+          if (await isRegistered(combo)) {
+            await unregister(combo);
+          }
+        } catch (e) {
+          console.warn("isRegistered/unregister failed; continuing", e);
+        }
+        await register(combo, async () => {
+          console.log("Global shortcut pressed:", combo);
+          const now = Date.now();
+          if (now - lastFired < cooldownMs) {
+            return;
+          }
+          lastFired = now;
+          try {
+            await invoke("center_overlay_bar");
+            console.log("Invoked center_overlay_bar");
+          } catch (e) {
+            console.error("Failed to center overlay bar", e);
+          }
+        });
+        const ok = await isRegistered(combo);
+        console.log("Registered global shortcut:", combo, ok);
+      } catch (e) {
+        console.error("Failed to register global shortcut", e);
+      }
+    };
+    setup();
+    return () => {
+      unregister(combo).catch(() => {});
+    };
+  }, []);
+
   // Listen for events and conditionally start watchers based on saved settings
   useEffect(() => {
     let unlisten: undefined | (() => void);

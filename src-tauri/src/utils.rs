@@ -56,17 +56,29 @@ pub fn smooth_move(
         return;
     }
 
-    let dx = (to.x - from.x) / steps as i32;
-    let dy = (to.y - from.y) / steps as i32;
+    let from_x = from.x as f64;
+    let from_y = from.y as f64;
+    let to_x = to.x as f64;
+    let to_y = to.y as f64;
 
     for i in 1..=steps {
-        let new_x = from.x + dx * i as i32;
-        let new_y = from.y + dy * i as i32;
+        // Progress from 0.0 to 1.0
+        let t = i as f64 / steps as f64;
+
+        // Easing function (ease-out cubic for smooth deceleration)
+        let ease = 1.0 - (1.0 - t).powi(3);
+
+        let new_x = from_x + (to_x - from_x) * ease;
+        let new_y = from_y + (to_y - from_y) * ease;
+
         let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition {
-            x: new_x,
-            y: new_y,
+            x: new_x.round() as i32,
+            y: new_y.round() as i32,
         }));
+
         thread::sleep(Duration::from_millis(delay));
     }
+
+    // Ensure final position is exact
     let _ = window.set_position(tauri::Position::Physical(to));
 }
