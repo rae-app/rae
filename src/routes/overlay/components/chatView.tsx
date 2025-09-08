@@ -28,6 +28,8 @@ import { animations } from "@/constants/animations";
 import { invoke } from "@tauri-apps/api/core";
 import { useNoteStore } from "@/store/noteStore";
 import animatedUnscreenGif from "../../../assets/animated-gifs01-unscreen.gif";
+import { OverlayButton } from "./OverlayComponents";
+import { ArrowElbowDownLeftIcon, ArrowsInSimpleIcon, ArrowsOutSimpleIcon, CaretDoubleUpIcon, TrashIcon } from "@phosphor-icons/react";
 const MODELS = [
   { label: "OpenAi", value: "gpt-4o-mini" },
   { label: "OpenAi", value: "gpt-4o" },
@@ -35,6 +37,7 @@ const MODELS = [
 ];
 
 interface ChatViewProps {
+  setChatOpen: (open: boolean) => void;
   onClose: () => void;
   initialMessage?: string;
   showChat?: boolean;
@@ -94,6 +97,7 @@ const performSmoothResize = async (
 export const ChatView = ({
   onClose,
   initialMessage,
+  setChatOpen,
   showChat,
   setShowChat,
   smoothResize,
@@ -526,11 +530,11 @@ export const ChatView = ({
       exit={{ y: "-100%" }}
       transition={{ duration: animations.overlayChat, ease: "circInOut" }}
       ref={chatContainerRef}
-      className="no-drag flex flex-col overflow-hidden border border-border relative min-h-[400px] z-[1000] rounded-xl shadow-lg mt-2"
+      className="no-drag flex flex-col overflow-hidden  relative min-h-[400px] z-[1000] rounded-xl shadow-lg mt-2"
     >
       <div className="flex-1 flex flex-col overflow-hidden text-foreground dark:bg-[#010101] min-h-[300px] relative transition-all duration-200">
         {/* Chat header */}
-        <div className="h-[44px] border-b overflow-hidden border-b-border w-full flex">
+        <div className="h-fit items-center border-b-2 overflow-hidden border-b-border/20 w-full flex">
           <div className="h-full w-full flex justify-between items-center p-2 tracking-tight font-medium">
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <div className="flex items-center gap-2 text-foreground min-w-0 flex-1">
@@ -540,7 +544,7 @@ export const ChatView = ({
                     <span className="truncate">Generating title...</span>
                   </div>
                 ) : (
-                  <span className="truncate flex-1">{overlayChatTitle}</span>
+                  <span className="truncate flex-1 px-2 text-sm">{overlayChatTitle}</span>
                 )}
               </div>
               {/* Insert button next to chat title */}
@@ -576,29 +580,36 @@ export const ChatView = ({
                 )}
               </AnimatePresence>
             </div>
-            <div className="text-zinc-600 text-sm font-light shrink-0 ml-2">
-              {getCurrentTime()}
+            <div className="text-zinc-600 text-sm  font-medium shrink-0 ml-2">
+              {getCurrentTime().toUpperCase()}
             </div>
           </div>
-          <div className="h-full flex ml-auto shrink-0">
-            <button
-              className="border-l h-[44px] hover:bg-foreground/10 border-border bg-background aspect-square shrink-0 flex items-center justify-center"
+          <div className="flex ml-auto shrink-0 h-[44px] gap-1 p-1">
+            <OverlayButton
+              
               onClick={handleNewChat}
               title="New Chat"
             >
-              <Trash2 size={18} />
-            </button>
-            <button
-              className="border-l h-[44px] hover:bg-foreground/10 border-border bg-background aspect-square shrink-0 flex items-center justify-center"
+              <TrashIcon weight="bold" />
+            </OverlayButton>
+            <OverlayButton
+              
               onClick={handleExpandChat}
               title="Open in main window"
             >
               {expandedChat == true ? (
-                <Minimize2 size={18} />
+                <ArrowsInSimpleIcon weight="bold"  />
               ) : (
-                <Maximize2 size={18} />
+                <ArrowsOutSimpleIcon weight="bold" />
               )}
-            </button>
+            </OverlayButton>
+             {/* <OverlayButton
+              
+              onClick={onClose}
+              title="Open in main window"
+            >
+              <CaretDoubleUpIcon weight="bold" />
+            </OverlayButton> */}
           </div>
         </div>
 
@@ -618,10 +629,10 @@ export const ChatView = ({
             return (
               <div
                 key={idx}
-                className={`px-4 py-2 rounded-lg text-sm ${
+                className={`p-2 rounded-lg text-sm ${
                   msg.sender === "user"
-                    ? "bg-foreground dark:bg-surface font-medium text-background self-end text-right ml-auto w-fit max-w-[70%]"
-                    : "bg-zinc-200 dark:bg-[#333333] dark:text-white  self-start text-left w-fit max-w-[450px]"
+                    ? "bg-foreground dark:bg-zinc-950 dark:text-white font-medium  self-end text-right ml-auto w-fit max-w-[70%]"
+                    : "bg-zinc-200 dark:bg-zinc-950 dark:text-white  self-start text-left w-fit max-w-[450px]"
                 }`}
               >
                 {msg.sender === "ai" ? (
@@ -665,7 +676,7 @@ export const ChatView = ({
                     })()}
                   </div>
                 ) : (
-                  msg.text
+                  <div className="px-2 dark:text-zinc-300">{msg.text}</div>
                 )}
 
                 {/* Show image if exists */}
@@ -674,7 +685,7 @@ export const ChatView = ({
                     <img
                       src={msg.image}
                       alt="User uploaded"
-                      className="max-w-full rounded-lg border border-gray-300"
+                      className="w-[200px] rounded-lg "
                     />
                   </div>
                 )}
@@ -747,9 +758,9 @@ export const ChatView = ({
             )}
           </AnimatePresence>
 
-          <div className="h-[44px] focus-within:bg-foreground/10 text-foreground bg-background border-t border-border relative flex items-center shrink-0">
+          <div className="h-[50px]  text-foreground bg-background relative flex items-center shrink-0">
             <div className="relative h-full">
-              <button
+              {/* <button
                 type="button"
                 className={`shrink-0 w-[120px] whitespace-nowrap bg-background h-full border-r border-border px-4 text-sm gap-2 flex items-center justify-center font-medium text-foreground select-none transition-colors hover:bg-foreground/10 ${dropdownOpen ? "bg-foreground/10" : ""}`}
                 onClick={() => setDropdownOpen((v) => !v)}
@@ -776,9 +787,10 @@ export const ChatView = ({
                     </button>
                   ))}
                 </div>
-              )}
+              )} */}
             </div>
-            <div className="relative flex-1">
+            <div className="w-full h-full py-1 pl-1">
+              <div className="relative size-full dark:bg-zinc-950 focus-within:dark:bg-zinc-950 rounded-lg transition-all duration-100 border-2 dark:border-zinc-950 focus-within:dark:border-zinc-900">
               <input
                 type="text"
                 value={chatInputText}
@@ -793,7 +805,7 @@ export const ChatView = ({
                     handleSendMessage();
                 }}
                 placeholder={attachedImage ? "Describe what you want to know about this image..." : "Enter your message or paste a screenshot"}
-                className="w-full px-4 h-full bg-transparent text-foreground placeholder:text-foreground/50 text-sm outline-none pr-12"
+                className="w-full px-4 dark:focus:placeholder:text-zinc-400/0 placeholder:transition-colors h-full bg-transparent text-foreground placeholder:text-foreground/50 text-sm outline-none pr-12"
               />
 
               {/* Image attachment indicator */}
@@ -809,7 +821,7 @@ export const ChatView = ({
                       <img
                         src={imagePreview}
                         alt="Attached screenshot"
-                        className="w-6 h-6 object-cover rounded border border-border cursor-pointer"
+                        className="w-6 h-6 object-cover rounded  cursor-pointer"
                         title="Screenshot attached - Click to remove"
                         onClick={clearImage}
                       />
@@ -825,15 +837,16 @@ export const ChatView = ({
                 )}
               </AnimatePresence>
             </div>
-            <div className="h-full w-fit right-0 inset-y-0 flex items-center">
-              <button
+            </div>
+            <div className="h-full w-fit  flex items-center p-1 ">
+              <OverlayButton
                 onClick={handleSendMessage}
-                className="h-full border-l hover:bg-foreground/10 border-border bg-background aspect-square shrink-0 flex items-center justify-center"
-                disabled={!chatInputText.trim()}
+               
+                className="dark:bg-zinc-950"
                 title="Send message"
               >
-                <Send size={18} />
-              </button>
+                <ArrowElbowDownLeftIcon weight="bold" />
+              </OverlayButton>
             </div>
           </div>
         </div>

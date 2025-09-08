@@ -17,6 +17,7 @@ import { animations } from "@/constants/animations";
 import { useUserStore } from "@/store/userStore";
 import { useNoteStore } from "@/store/noteStore";
 import { GetNotes } from "@/api/notes";
+import { ArrowElbowDownLeftIcon, MicrophoneIcon, PushPinIcon } from "@phosphor-icons/react";
 const DEFAULT_CHAT = [480, 470];
 const EXPANDED_CHAT = [600, 570];
 const NOTCH_TIMEOUT = 2000;
@@ -53,11 +54,11 @@ const DISABLE_PIN_ON_SHOW = { current: false };
  * Helper functions for notch styling and layout
  */
 const getNotchClasses = (isNotch: boolean, showGradient: boolean) => {
-  const baseClasses = "flex flex-col  min-h-0";
+  const baseClasses = "flex flex-col  min-h-0 overflow-hidden";
 
   if (!isNotch) return `${baseClasses} text-foreground`;
 
-  const notchClasses = "w-[360px] h-24 -mt-2 border-border backdrop-blur-sm relative";
+  const notchClasses = "w-[360px] h-24 -mt-2 border-border backdrop-blur-sm relative overflow-hidden";
   const backgroundClasses = showGradient
     ? "bg-white/80 dark:bg-black/80"
     : "dark:bg-black bg-white";
@@ -675,7 +676,7 @@ const Overlay = () => {
           duration: animations.overlayExpand,
           ease: "circOut",
         }}
-        className={`${getNotchClasses(isNotch, showGradient)}`}
+        className={`${getNotchClasses(isNotch, showGradient)} `}
         style={getNotchStyle(isNotch)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -708,8 +709,9 @@ const Overlay = () => {
           } ${isNotch ? "pointer-events-none" : ""}`}
           style={{  borderRadius: "12px" }}
         >
-          <OverlayButton
-            className="!border-none hover:!bg-foreground/5 !aspect-auto !w-[40px] !rounded-l-[12px] hover:!rounded-l-[12px]"
+          <div className="p-1 w-fit h-full">
+            <OverlayButton
+            // className="!border-none hover:!bg-foreground/5 !aspect-auto  !rounded-l-[12px] hover:!rounded-l-[12px]"
             customBgColor="white"
             active={false}
             onClick={() => setIsActive(!isActive)}
@@ -770,6 +772,7 @@ const Overlay = () => {
               )}
             </div>
           </OverlayButton>
+          </div>
 
           <div
             className={`group ${
@@ -786,7 +789,7 @@ const Overlay = () => {
                   <input
                     autoFocus
                     type="text"
-                    className="no-drag text-foreground/60 text-sm font-medium border-none outline-none bg-transparent w-full placeholder:text-foreground/50"
+                    className="no-drag text-foreground/60 text-sm font-medium border-none placeholder:font-medium outline-none bg-transparent w-full placeholder:dark:text-zinc-500 focus:dark:placeholder:text-zinc-400/0 placeholder:transition-colors" 
                     placeholder="Ask Rae anything..."
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
@@ -866,22 +869,23 @@ const Overlay = () => {
             ) : null}
           </div>
 
-          <div className="flex items-center h-full ml-auto">
+          <div className="flex items-center h-full ml-auto p-1 gap-1">
             {!showChat && inputText.trim().length > 0 && (
-              <button
-                className="no-drag h-full flex items-center gap-1 hover:bg-foreground/10  p-2 text-sm border-l border-border"
+              <OverlayButton
+                className="no-drag h-full flex items-center gap-1 hover:bg-foreground/10  p-2 text-sm  border-border"
                 onClick={handleSendFromMainBar}
               >
-                Send
-              </button>
+                <ArrowElbowDownLeftIcon weight="bold" />
+              </OverlayButton>
             )}
             <OverlayButton
-              onClick={() => {}}
+              onClick={() => {setMicOn(v => !v)}}
               active={micOn}
               title="Voice"
-              draggable={!isPinned}
+              draggable={!micOn}
+              className={micOn ? "!text-[#ffe941] dark:!text-surface " : ""}
             >
-              <Mic size={16} />
+              <MicrophoneIcon weight={micOn ? "fill" : "bold"} />
             </OverlayButton>
             <OverlayButton
               onClick={handlePinClick}
@@ -890,7 +894,7 @@ const Overlay = () => {
               draggable={!isPinned}
               className={isPinned ? "!text-[#ffe941] dark:!text-surface" : ""}
             >
-              <Pin size={16} />
+              <PushPinIcon weight={isPinned ? "fill" : "bold"} />
             </OverlayButton>
             {showChat ? (
               <OverlayButton
@@ -1007,6 +1011,8 @@ const Overlay = () => {
         <AnimatePresence mode="sync">
           {chatOpen && (
             <ChatView
+              setChatOpen={setChatOpen}
+              
               onClose={handleCloseChatClick}
               initialMessage={initialChatMessage}
               smoothResize={smoothResize}
