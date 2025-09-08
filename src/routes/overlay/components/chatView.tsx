@@ -375,11 +375,6 @@ export const ChatView = ({
         { sender: "ai" as const, text: ai_res.aiResponse, image: "" },
       ];
 
-      if (!expandedChat && setExpandedChat) {
-        await performSmoothResize(600, 580, 160);
-        await performSmoothResize(600, 570, 160);
-        setExpandedChat(true);
-      }
 
       setMessages(updatedMessages);
       setCurrResponse(ai_res.aiResponse);
@@ -443,11 +438,7 @@ export const ChatView = ({
         { sender: "ai" as const, text: ai_res.aiResponse, image: "" },
       ];
 
-      if (!expandedChat && setExpandedChat) {
-        await performSmoothResize(600, 580, 160);
-        await performSmoothResize(600, 570, 160);
-        setExpandedChat(true);
-      }
+      
 
       setMessages(updatedMessages);
       setCurrResponse(ai_res.aiResponse);
@@ -493,20 +484,7 @@ export const ChatView = ({
     setImagePreview(null);
   };
 
-  const handleExpandChat = async () => {
-    if (expandedChat) {
-      // Collapsing - use delayed resize to match animation timing
-      setTimeout(async () => {
-        await performSmoothResize(500, 480, 200);
-        await performSmoothResize(480, 470, 200);
-      }, animations.overlayExpand * 1000);
-    } else {
-      // Expanding - immediate resize
-      await performSmoothResize(600, 580, 160);
-      await performSmoothResize(600, 570, 160);
-    }
-    setExpandedChat(!expandedChat);
-  };
+  
 
   const getCurrentTime = () =>
     new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
