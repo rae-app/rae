@@ -167,6 +167,7 @@ const Sidebar = () => {
           expanded={expanded}
           onClick={() => {
             // setExpanded(false)
+            setCurrentConvo(-1);
             navigate("/app/chat");
           }}
         >

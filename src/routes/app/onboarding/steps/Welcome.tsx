@@ -52,7 +52,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
         >
           Your personal assistant
         </motion.p>
-        {!loggedIn && (
+        
           <motion.div
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -67,7 +67,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
               Get started
             </Button>
           </motion.div>
-        )}
+        
       </div>
     </div>
   );

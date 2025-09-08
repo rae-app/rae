@@ -4,6 +4,7 @@ import autosize from "autosize";
 import { ChevronDown, Send, Globe, Brain, Image, X } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { AnimatePresence, motion } from "motion/react";
+import { ArrowElbowDownLeftIcon } from "@phosphor-icons/react";
 
 const defaultModels = [
   { label: "OpenAi", value: "gpt-4o-mini" },
@@ -24,6 +25,7 @@ interface ChatProps {
   onMessageChange?: (message: string) => void;
   selectedTool?: 0 | 1 | 2;
   onToolChange?: (tool: 0 | 1 | 2) => void;
+  initial?: boolean;
 }
 
 const Chat: React.FC<ChatProps> = ({
@@ -39,6 +41,7 @@ const Chat: React.FC<ChatProps> = ({
   onMessageChange,
   selectedTool = 0,
   onToolChange,
+  initial = false,
 }) => {
   const chatInputRef = useRef<HTMLTextAreaElement>(null);
   const [message, setMessage] = useState(initialMessage || "");
@@ -47,7 +50,11 @@ const Chat: React.FC<ChatProps> = ({
   const [isTyping, setIsTyping] = useState(false);
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [init, setInit] = useState(false);
+  const [init, setInit] = useState(initial);
+  // If initial prop changes, update init accordingly
+  useEffect(() => {
+    setInit(initial);
+  }, [initial]);
 
   // Use local model state if not controlled
   const modelsList = modelsProp || defaultModels;
@@ -160,9 +167,9 @@ const Chat: React.FC<ChatProps> = ({
   return (
     <div className="absolute pointer-events-none size-full flex flex-col gap-4 items-center justify-center left-0 top-0 z-40 text-foreground">
       <motion.div
-        initial={{ bottom: "30%", opacity: 0 }}
+        initial={{ bottom: "35%", opacity: 0 }}
         animate={{ bottom: init ? "0%" : "40%", opacity: 1 }}
-        className="flex flex-col absolute w-full  p-2 gap-4 justify-center items-center"
+        className="flex flex-col absolute  w-full  p-2 gap-4 justify-center items-center"
       >
         {!init && (
           <>
@@ -175,7 +182,7 @@ const Chat: React.FC<ChatProps> = ({
               className=" pointer-events-auto flex gap-2 relative"
             >
               <div className="w-full">
-                <div className="bg-card/50 w-full h-fit border flex flex-col transition-all rounded-lg border-border group focus-within:border-foreground/20 ">
+                <div className="bg-zinc-900/50 w-full h-fit border flex flex-col transition-all rounded-lg border-border group focus-within:border-foreground/20 ">
                   <div className="relative">
                     <textarea
                       onChange={() => handleInputChange(chatInputRef.current?.value ?? "")}
@@ -271,15 +278,15 @@ const Chat: React.FC<ChatProps> = ({
                         disabled ? "saturate-0 pointer-events-none" : ""
                       } flex items-center justify-center `}
                     >
-                      <Button
+                      <button
                         disabled={disabled}
-                        className={`rounded-lg  size-full  p-0 flex items-center justify-center ${
-                          disabled && "!bg-foreground/5 !text-foreground/20"
+                        className={`rounded-lg size-full dark:bg-zinc-800 dark:hover:bg-zinc-700 transition-colors duration-100 p-0 flex items-center justify-center ${
+                          disabled && "dark:bg-zinc-800  !text-foreground/20"
                         }`}
                         onClick={handleSend}
                       >
-                        <Send size={14}></Send>
-                      </Button>
+                        <ArrowElbowDownLeftIcon weight="bold"></ArrowElbowDownLeftIcon>
+                      </button>
                     </motion.div>
                   </div>
                 </div>
@@ -287,14 +294,16 @@ const Chat: React.FC<ChatProps> = ({
             </motion.div>
           </>
         )}
-        {init && (
+        <AnimatePresence mode="popLayout">
+            {init && (
           <motion.div
             initial={{ width: "70%", height: "100px" }}
             animate={{ width: "100%", height: "120px" }}
+            // exit={{ width: "70%", height: "100px" }}
             className=" pointer-events-auto flex gap-2 relative"
           >
             
-              <div className="bg-card/50 w-full h-full border flex flex-col transition-all rounded-lg border-border group focus-within:border-foreground/20 ">
+              <div className="bg-zinc-900/50 w-full h-full border flex flex-col transition-all rounded-lg border-border group focus-within:border-foreground/20 ">
                 <div className="relative h-full">
                   <textarea
                     onChange={() => handleInputChange(chatInputRef.current?.value ?? "")}
@@ -342,7 +351,7 @@ const Chat: React.FC<ChatProps> = ({
                     )}
                   </AnimatePresence>
                 </div>
-                <div className=" text-sm shrink-0 w-full flex h-fit p-1">
+                <div className=" text-sm shrink-0 w-full flex h-fit p-1 overflow-hidden">
                   <div className="h-full w-fit relative">
                     <AnimatePresence>
                       {expanded && (
@@ -390,21 +399,22 @@ const Chat: React.FC<ChatProps> = ({
                       disabled ? "saturate-0 pointer-events-none" : ""
                     } flex items-center justify-center `}
                   >
-                    <Button
-                      disabled={disabled}
-                      className={`rounded-lg  size-full  p-0 flex items-center justify-center ${
-                        disabled && "!bg-foreground/5 !text-foreground/20"
-                      }`}
-                      onClick={handleSend}
-                    >
-                      <Send size={14}></Send>
-                    </Button>
+                   <button
+                        disabled={disabled}
+                        className={`rounded-lg size-full dark:bg-zinc-800 dark:hover:bg-zinc-700 transition-colors duration-100 p-0 flex items-center justify-center ${
+                          disabled && "dark:bg-zinc-800  !text-foreground/20"
+                        }`}
+                        onClick={handleSend}
+                      >
+                        <ArrowElbowDownLeftIcon weight="bold"></ArrowElbowDownLeftIcon>
+                      </button>
                   </motion.div>
                 </div>
               </div>
             
           </motion.div>
         )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );

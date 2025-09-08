@@ -73,9 +73,17 @@ export default function ChatWindow() {
     if (email) {
       fetchConvoHistory(email);
       setCurrentConvo(-1);
+      // Fetch messages when currentConvoId changes (and is not -1)
+      
     }
   }, [email, fetchConvoHistory]);
-
+useEffect(() => {
+        if (currentConvoId !== -1) {
+          convoChange(currentConvoId);
+        } else {
+          setMessages([]);
+        }
+      }, [currentConvoId]);
   // Scroll to bottom on new message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -262,14 +270,14 @@ export default function ChatWindow() {
   return (
     <div className="w-full h-[calc(100vh-36px)]  bg-background flex ">
       {/* Chat Area only, sidebar removed */}
-      <div className="flex flex-col w-full">
+      <div className="flex flex-col w-full overflow-hidden relative">
         <motion.div
           ref={chatContainerRef}
-          className="flex-1 flex flex-col overflow-y-auto border-border relative min-h-0"
+          className="flex flex-col overflow-hidden border-border relative h-[calc(100vh-170px)]"
         >
           <div className="flex-1 flex flex-col overflow-y-auto p-2 space-y-1 scrollbar-hide">
             {loadingMessages && (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/70 z-10">
+              <div className="absolute inset-0 flex items-center justify-center  z-10">
                 <Loader2 className="animate-spin text-zinc-700" size={24} />
               </div>
             )}
@@ -370,7 +378,10 @@ export default function ChatWindow() {
 
             <div ref={bottomRef} />
           </div>
-          <Chat
+          
+          {/* Input area with overlay icons */}
+        </motion.div>
+        <Chat
             name={name}
             onSend={handleSend}
             onWebSearch={handleWebSearch}
@@ -383,9 +394,8 @@ export default function ChatWindow() {
             onMessageChange={setCurrentInputMessage}
             selectedTool={selectedTool}
             onToolChange={setSelectedTool}
+            initial={currentConvoId !== -1}
           />
-          {/* Input area with overlay icons */}
-        </motion.div>
       </div>
     </div>
   );

@@ -193,11 +193,7 @@ export const ChatView = ({
       ];
 
       // Auto-expand chat when AI response is received (if not already expanded)
-      if (!expandedChat && setExpandedChat) {
-        await performSmoothResize(600, 570, 160);
-        await performSmoothResize(600, 570, 160);
-        setExpandedChat(true);
-      }
+      
 
       setMessages(updatedMessages);
       setCurrResponse(ai_res.aiResponse);
@@ -592,17 +588,7 @@ export const ChatView = ({
             >
               <TrashIcon weight="bold" />
             </OverlayButton>
-            <OverlayButton
-              
-              onClick={handleExpandChat}
-              title="Open in main window"
-            >
-              {expandedChat == true ? (
-                <ArrowsInSimpleIcon weight="bold"  />
-              ) : (
-                <ArrowsOutSimpleIcon weight="bold" />
-              )}
-            </OverlayButton>
+            
              {/* <OverlayButton
               
               onClick={onClose}

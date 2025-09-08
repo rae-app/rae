@@ -80,7 +80,7 @@ const Auth: React.FC<{ onNext: (step: string) => void }> = ({ onNext }) => {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="no-drag w-full px-4 py-3 border-2 dark:border-zinc-600 focus:dark:border-surface/80 rounded-lg  text-sm outline-none"
+          className="no-drag  w-full px-4 py-3 border-2 dark:border-zinc-600 focus:dark:border-surface/80 rounded-lg  text-sm outline-none"
         />
 
         {!isLogin && (

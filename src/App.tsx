@@ -34,6 +34,8 @@ import Agents from "./routes/app/agents/page";
 import { emit, listen } from "@tauri-apps/api/event";
 import Agent from "./routes/app/agents/agent/page";
 import Memory from "./routes/settings/memory/page";
+import { LaunchOverlayWindow } from "./routes/overlay/components/OverlayLauncher";
+import { useUserStore } from "./store/userStore";
 
 function App() {
   const { darkTheme, initializeTheme } = useDarkThemeStore();
@@ -185,7 +187,13 @@ function App() {
       unlisten.then((unlisten) => unlisten());
     };
   });
-
+  const {loggedIn} = useUserStore();
+useEffect(() => {
+    // Only launch the magic dot when logged in
+    if (loggedIn) {
+      LaunchOverlayWindow();
+    }
+  }, [loggedIn]);
   return (
     // <div className="size-full bg-background rounded-lg overflow-hidden">
     <Routes>

@@ -58,7 +58,7 @@ const getNotchClasses = (isNotch: boolean, showGradient: boolean) => {
 
   if (!isNotch) return `${baseClasses} text-foreground`;
 
-  const notchClasses = "w-[360px] h-24 -mt-2 border-border backdrop-blur-sm relative overflow-hidden";
+  const notchClasses = "w-[360px] h-24 -mt-2 border-border backdrop-blur-sm absolute  overflow-hidden";
   const backgroundClasses = showGradient
     ? "bg-white/80 dark:bg-black/80"
     : "dark:bg-black bg-white";
