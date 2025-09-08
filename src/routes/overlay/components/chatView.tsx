@@ -103,8 +103,7 @@ export const ChatView = ({
   smoothResize,
   windowName,
   windowIcon,
-  expandedChat,
-  setExpandedChat,
+  
   windowScreenshot,
 }: ChatViewProps) => {
   const { email } = useUserStore();
@@ -618,7 +617,7 @@ export const ChatView = ({
                 className={`p-2 rounded-lg text-sm ${
                   msg.sender === "user"
                     ? "bg-foreground dark:bg-zinc-950 dark:text-white font-medium  self-end text-right ml-auto w-fit max-w-[70%]"
-                    : "bg-zinc-200 dark:bg-zinc-950 dark:text-white  self-start text-left w-fit max-w-[450px]"
+                    : "bg-zinc-200 dark:bg-zinc-950 dark:text-white  self-start text-left w-fit max-w-[300px]"
                 }`}
               >
                 {msg.sender === "ai" ? (
@@ -680,21 +679,30 @@ export const ChatView = ({
           })}
 
           {/* AI Thinking Animation - Simple Pulsing Dot */}
-          {isAIThinking && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.2 }}
-              className="self-start flex items-center justify-center"
-            >
-              <img
-                src={animatedUnscreenGif}
-                alt="AI thinking animation"
-                className="w-10 h-10 object-cover"
-              />
-            </motion.div>
-          )}
+          <AnimatePresence mode="popLayout">
+              {isAIThinking && (
+                <motion.div
+                  className="flex gap-2 mt-2 mx-4 dark:text-zinc-200  font-medium items-center text-sm h-fit"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <motion.div
+                    initial={{ borderRadius: "0%", rotate: "90deg" }}
+                    animate={{ borderRadius: ["0%","50%", "0%"], rotate: ["90deg", "180deg", "270deg"] }}
+                    transition={{
+                      duration: 1,
+                      ease: "linear",
+                      repeat: Infinity,
+                      repeatType: "loop",
+                    }}
+                    className="self-start flex items-center relative border-[3px] border-surface size-[20px] justify-center"
+                  ></motion.div>
+
+                  <div className="animate-pulse">Rae is thinking...</div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
           <div ref={bottomRef} />
         </div>

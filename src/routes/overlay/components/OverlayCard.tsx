@@ -19,7 +19,7 @@ import { useNoteStore } from "@/store/noteStore";
 import { GetNotes } from "@/api/notes";
 import { ArrowElbowDownLeftIcon, MicrophoneIcon, PushPinIcon } from "@phosphor-icons/react";
 const DEFAULT_CHAT = [480, 470];
-const EXPANDED_CHAT = [600, 570];
+
 const NOTCH_TIMEOUT = 2000;
 
 // Constants for notch styling
@@ -543,7 +543,7 @@ const Overlay = () => {
     setWindowScreenshot("");
   };
 
-  const [expandedChat, setExpandedChat] = useState(false);
+  // const [expandedChat, setExpandedChat] = useState(false);
   const [windowScreenshot, setWindowScreenshot] = useState<string>("");
   const [showScreenshot, setShowScreenshot] = useState(false);
   const [isHoveringScreenshot, setIsHoveringScreenshot] = useState(false);
@@ -667,8 +667,8 @@ const Overlay = () => {
                 scale: 1,
                 y: 0,
                 borderRadius: "12px",
-                width: expandedChat ? EXPANDED_CHAT[0] : DEFAULT_CHAT[0],
-                height: expandedChat ? EXPANDED_CHAT[1] : DEFAULT_CHAT[1],
+                width: DEFAULT_CHAT[0],
+                height:  DEFAULT_CHAT[1],
               }
         }
         transition={{
@@ -1020,8 +1020,7 @@ const Overlay = () => {
               setShowChat={setShowChat}
               windowName={windowName}
               windowIcon={windowIcon}
-              expandedChat={expandedChat}
-              setExpandedChat={setExpandedChat}
+              
               windowScreenshot={windowScreenshot}
             />
           )}
