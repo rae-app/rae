@@ -74,16 +74,15 @@ export default function ChatWindow() {
       fetchConvoHistory(email);
       setCurrentConvo(-1);
       // Fetch messages when currentConvoId changes (and is not -1)
-      
     }
   }, [email, fetchConvoHistory]);
-useEffect(() => {
-        if (currentConvoId !== -1) {
-          convoChange(currentConvoId);
-        } else {
-          setMessages([]);
-        }
-      }, [currentConvoId]);
+  useEffect(() => {
+    if (currentConvoId !== -1) {
+      convoChange(currentConvoId);
+    } else {
+      setMessages([]);
+    }
+  }, [currentConvoId]);
   // Scroll to bottom on new message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -363,39 +362,48 @@ useEffect(() => {
             <AnimatePresence mode="popLayout">
               {isAIThinking && (
                 <motion.div
-                  className="flex gap-2 dark:text-zinc-200 animate-pulse font-medium items-center text-sm h-fit"
-                  initial={{ opacity: 0}}
+                  className="flex gap-2 mt-2 mx-4 dark:text-zinc-200  font-medium items-center text-sm h-fit"
+                  initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  
                   transition={{ duration: 0.2 }}
                 >
-                  
-                  <motion.div className="self-start flex items-center relative border-3 border-surface  rounded-full size-[20px] justify-center"></motion.div>
-                  Rae is thinking...
+                  <motion.div
+                    initial={{ borderRadius: "0%", rotate: "90deg" }}
+                    animate={{ borderRadius: ["0%","50%", "0%"], rotate: ["90deg", "180deg", "270deg"] }}
+                    transition={{
+                      duration: 1,
+                      ease: "linear",
+                      repeat: Infinity,
+                      repeatType: "loop",
+                    }}
+                    className="self-start flex items-center relative border-[3px] border-surface size-[20px] justify-center"
+                  ></motion.div>
+
+                  <div className="animate-pulse">Rae is thinking...</div>
                 </motion.div>
               )}
             </AnimatePresence>
 
             <div ref={bottomRef} />
           </div>
-          
+
           {/* Input area with overlay icons */}
         </motion.div>
         <Chat
-            name={name}
-            onSend={handleSend}
-            onWebSearch={handleWebSearch}
-            onSupermemory={handleSupermemory}
-            currentModel={currentModel}
-            setCurrentModel={setCurrentModel}
-            models={MODELS}
-            initialMessage={initialMessage}
-            onTypingChange={handleTypingChange}
-            onMessageChange={setCurrentInputMessage}
-            selectedTool={selectedTool}
-            onToolChange={setSelectedTool}
-            initial={currentConvoId !== -1}
-          />
+          name={name}
+          onSend={handleSend}
+          onWebSearch={handleWebSearch}
+          onSupermemory={handleSupermemory}
+          currentModel={currentModel}
+          setCurrentModel={setCurrentModel}
+          models={MODELS}
+          initialMessage={initialMessage}
+          onTypingChange={handleTypingChange}
+          onMessageChange={setCurrentInputMessage}
+          selectedTool={selectedTool}
+          onToolChange={setSelectedTool}
+          initial={currentConvoId !== -1}
+        />
       </div>
     </div>
   );
