@@ -1,7 +1,7 @@
 import React from "react";
 
 export interface OverlayButtonProps {
-  onClick: () => void;
+  onClick: (e: React.MouseEvent) => void;
   active?: boolean;
   title?: string;
   children: React.ReactNode;
@@ -19,11 +19,13 @@ export const OverlayButton = ({
   customBgColor = "",
   draggable = true,
 }: OverlayButtonProps) => (
-  <div onClick={onClick} className="h-full group aspect-square shrink-0 ">
+  <div onClick={(e) => {
+    onClick(e);
+  }} className="h-full group aspect-square shrink-0 ">
     <button
     
     className={`${
-      draggable ? "drag" : ""
+      draggable ? "" : ""
     } h-full bg-transparent focus:bg-zinc-900  group-hover:dark:bg-zinc-900 outline-none  active:outline-2 active:outline-surface group-hover:dark:text-white dark:text-zinc-400  flex items-center justify-center aspect-square shrink-0 rounded-lg transition-all duration-100   ${
       active ? `dark:bg-surface/10  text-surface ` : ""
     } ${className}`}

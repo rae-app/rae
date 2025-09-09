@@ -8,7 +8,7 @@ import {
 } from "@/utils/windowUtils";
 import { AnimatePresence, motion } from "framer-motion";
 import { OverlayButton } from "./OverlayComponents";
-import { ChatView } from "./chatView";
+import { ChatView } from "./ChatCard";
 import { Pin, X, Mic, Maximize, Palette } from "lucide-react";
 import notchSound from "../../../assets/sounds/bubble-pop-06-351337.mp3";
 import gradientGif from "../../../assets/gradient.gif";
@@ -866,7 +866,7 @@ const Overlay = () => {
                   </div>
                 )}
               </div>
-            ) : null}
+            ) : <div className="size-full drag" ></div>}
           </div>
 
           <div className="flex items-center h-full ml-auto p-1 gap-1">

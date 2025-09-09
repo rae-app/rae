@@ -1,10 +1,20 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  MouseEventHandler,
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { emit } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { useUserStore } from "@/store/userStore";
 import { useChatStore } from "@/store/chatStore";
-import { Generate, GenerateWithWebSearch, GenerateWithSupermemory } from "@/api/chat";
+import {
+  Generate,
+  GenerateWithWebSearch,
+  GenerateWithSupermemory,
+} from "@/api/chat";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -29,7 +39,20 @@ import { invoke } from "@tauri-apps/api/core";
 import { useNoteStore } from "@/store/noteStore";
 import animatedUnscreenGif from "../../../assets/animated-gifs01-unscreen.gif";
 import { OverlayButton } from "./OverlayComponents";
-import { ArrowElbowDownLeftIcon, ArrowsInSimpleIcon, ArrowsOutSimpleIcon, CaretDoubleUpIcon, TrashIcon } from "@phosphor-icons/react";
+import {
+  ArrowElbowDownLeftIcon,
+  ArrowsInSimpleIcon,
+  ArrowsOutSimpleIcon,
+  BrainIcon,
+  CaretDoubleUpIcon,
+  CheckIcon,
+  DotsThreeVerticalIcon,
+  GearSixIcon,
+  GlobeSimpleIcon,
+  SlidersHorizontalIcon,
+  SlidersIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
 const MODELS = [
   { label: "OpenAi", value: "gpt-4o-mini" },
   { label: "OpenAi", value: "gpt-4o" },
@@ -50,11 +73,45 @@ interface ChatViewProps {
   windowScreenshot?: string;
 }
 
+const Option = ({
+  icon,
+  children,
+  active,
+  onClick,
+}: {
+  icon: ReactNode;
+  children: ReactNode;
+  active: boolean;
+  onClick: () => void;
+}) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex gap-2 text-sm w-full transition-colors duration-100 px-2 py-1 dark:text-zinc-400 font-medium hover:dark:text-white hover:dark:bg-zinc-900 ${
+        active && "dark:!bg-surface dark:!text-white"
+      } rounded-md items-center`}
+    >
+      {icon}
+      {children}
+      {active && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="ml-auto"
+          transition={{ duration: 0.2, ease: "easeInOut", type: "tween" }}
+        >
+          <CheckIcon className="" weight="bold" />
+        </motion.div>
+      )}
+    </button>
+  );
+};
+
 // Utility function for smooth window resizing with easing
 const performSmoothResize = async (
   targetWidth: number,
   targetHeight: number,
-  duration: number = 160,
+  duration: number = 160
 ) => {
   const win = getCurrentWebviewWindow();
   const currentSize = await win.innerSize();
@@ -73,10 +130,10 @@ const performSmoothResize = async (
       const easedProgress = easeOutCubic(progress);
 
       const currentWidth = Math.round(
-        startWidth + (targetWidth - startWidth) * easedProgress,
+        startWidth + (targetWidth - startWidth) * easedProgress
       );
       const currentHeight = Math.round(
-        startHeight + (targetHeight - startHeight) * easedProgress,
+        startHeight + (targetHeight - startHeight) * easedProgress
       );
 
       await win.setSize(new LogicalSize(currentWidth, currentHeight));
@@ -103,7 +160,7 @@ export const ChatView = ({
   smoothResize,
   windowName,
   windowIcon,
-  
+
   windowScreenshot,
 }: ChatViewProps) => {
   const { email } = useUserStore();
@@ -155,7 +212,11 @@ export const ChatView = ({
 
     const newMessages = [
       ...messages,
-      { sender: "user" as const, text: userMsg, image: attachedImage || windowScreenshot || "" },
+      {
+        sender: "user" as const,
+        text: userMsg,
+        image: attachedImage || windowScreenshot || "",
+      },
     ];
     setMessages(newMessages);
     if (overlayConvoId === -1) setTitleLoading(true);
@@ -171,7 +232,7 @@ export const ChatView = ({
       "Image to send:",
       imageToSend.length || 0,
       "characters",
-      manualImage ? "(manual)" : "(window screenshot)",
+      manualImage ? "(manual)" : "(window screenshot)"
     );
 
     try {
@@ -192,7 +253,6 @@ export const ChatView = ({
       ];
 
       // Auto-expand chat when AI response is received (if not already expanded)
-      
 
       setMessages(updatedMessages);
       setCurrResponse(ai_res.aiResponse);
@@ -208,7 +268,11 @@ export const ChatView = ({
       console.error("Error getting AI response:", error);
       const errorMessages = [
         ...newMessages,
-        { sender: "ai" as const, text: "Sorry, I encountered an error.", image: "" },
+        {
+          sender: "ai" as const,
+          text: "Sorry, I encountered an error.",
+          image: "",
+        },
       ];
       setMessages(errorMessages);
     } finally {
@@ -312,7 +376,7 @@ export const ChatView = ({
 
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      if (item.type.indexOf('image') !== -1) {
+      if (item.type.indexOf("image") !== -1) {
         e.preventDefault();
         const file = item.getAsFile();
         if (file) {
@@ -349,7 +413,11 @@ export const ChatView = ({
 
     const newMessages = [
       ...messages,
-      { sender: "user" as const, text: userMsg, image: attachedImage || windowScreenshot || "" }, // Normal message without prefix
+      {
+        sender: "user" as const,
+        text: userMsg,
+        image: attachedImage || windowScreenshot || "",
+      }, // Normal message without prefix
     ];
     setMessages(newMessages);
     if (overlayConvoId === -1) setTitleLoading(true);
@@ -375,7 +443,6 @@ export const ChatView = ({
         { sender: "ai" as const, text: ai_res.aiResponse, image: "" },
       ];
 
-
       setMessages(updatedMessages);
       setCurrResponse(ai_res.aiResponse);
       setIsTyping(true);
@@ -389,7 +456,11 @@ export const ChatView = ({
       console.error("Error getting web search response:", error);
       const errorMessages = [
         ...newMessages,
-        { sender: "ai" as const, text: "Sorry, I encountered an error with web search.", image: "" },
+        {
+          sender: "ai" as const,
+          text: "Sorry, I encountered an error with web search.",
+          image: "",
+        },
       ];
       setMessages(errorMessages);
     } finally {
@@ -412,7 +483,11 @@ export const ChatView = ({
 
     const newMessages = [
       ...messages,
-      { sender: "user" as const, text: userMsg, image: attachedImage || windowScreenshot || "" }, // Normal message without prefix
+      {
+        sender: "user" as const,
+        text: userMsg,
+        image: attachedImage || windowScreenshot || "",
+      }, // Normal message without prefix
     ];
     setMessages(newMessages);
     if (overlayConvoId === -1) setTitleLoading(true);
@@ -438,8 +513,6 @@ export const ChatView = ({
         { sender: "ai" as const, text: ai_res.aiResponse, image: "" },
       ];
 
-      
-
       setMessages(updatedMessages);
       setCurrResponse(ai_res.aiResponse);
       setIsTyping(true);
@@ -453,7 +526,11 @@ export const ChatView = ({
       console.error("Error getting supermemory response:", error);
       const errorMessages = [
         ...newMessages,
-        { sender: "ai" as const, text: "Sorry, I encountered an error with memory search.", image: "" },
+        {
+          sender: "ai" as const,
+          text: "Sorry, I encountered an error with memory search.",
+          image: "",
+        },
       ];
       setMessages(errorMessages);
     } finally {
@@ -484,8 +561,6 @@ export const ChatView = ({
     setImagePreview(null);
   };
 
-  
-
   const getCurrentTime = () =>
     new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
@@ -496,8 +571,13 @@ export const ChatView = ({
     });
   };
 
+  const [optionsOpen, setOptionsOpen] = useState(false);
+
   return (
     <motion.div
+      onClick={() => {
+        setOptionsOpen(false);
+      }}
       initial={{ y: "-100%" }}
       animate={{ y: "0%" }}
       exit={{ y: "-100%" }}
@@ -517,7 +597,9 @@ export const ChatView = ({
                     <span className="truncate">Generating title...</span>
                   </div>
                 ) : (
-                  <span className="truncate flex-1 px-2 text-sm">{overlayChatTitle}</span>
+                  <span className="truncate flex-1 px-2 text-sm">
+                    {overlayChatTitle}
+                  </span>
                 )}
               </div>
               {/* Insert button next to chat title */}
@@ -558,15 +640,11 @@ export const ChatView = ({
             </div>
           </div>
           <div className="flex ml-auto shrink-0 h-[44px] gap-1 p-1">
-            <OverlayButton
-              
-              onClick={handleNewChat}
-              title="New Chat"
-            >
+            <OverlayButton onClick={handleNewChat} title="New Chat">
               <TrashIcon weight="bold" />
             </OverlayButton>
-            
-             {/* <OverlayButton
+
+            {/* <OverlayButton
               
               onClick={onClose}
               title="Open in main window"
@@ -658,29 +736,32 @@ export const ChatView = ({
 
           {/* AI Thinking Animation - Simple Pulsing Dot */}
           <AnimatePresence mode="popLayout">
-              {isAIThinking && (
+            {isAIThinking && (
+              <motion.div
+                className="flex gap-2 mt-2 mx-4 dark:text-zinc-200  font-medium items-center text-sm h-fit"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
+              >
                 <motion.div
-                  className="flex gap-2 mt-2 mx-4 dark:text-zinc-200  font-medium items-center text-sm h-fit"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <motion.div
-                    initial={{ borderRadius: "0%", rotate: "90deg" }}
-                    animate={{ borderRadius: ["0%","50%", "0%"], rotate: ["90deg", "180deg", "270deg"] }}
-                    transition={{
-                      duration: 1,
-                      ease: "linear",
-                      repeat: Infinity,
-                      repeatType: "loop",
-                    }}
-                    className="self-start flex items-center relative border-[3px] border-surface size-[20px] justify-center"
-                  ></motion.div>
+                  initial={{ borderRadius: "0%", rotate: "90deg" }}
+                  animate={{
+                    borderRadius: ["0%", "50%", "0%"],
+                    rotate: ["90deg", "180deg", "270deg"],
+                  }}
+                  transition={{
+                    duration: 1,
+                    ease: "linear",
+                    repeat: Infinity,
+                    repeatType: "loop",
+                  }}
+                  className="self-start flex items-center relative border-[3px] border-surface size-[20px] justify-center"
+                ></motion.div>
 
-                  <div className="animate-pulse">Rae is thinking...</div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                <div className="animate-pulse">Rae is thinking...</div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div ref={bottomRef} />
         </div>
@@ -688,47 +769,7 @@ export const ChatView = ({
         {/* Input area with overlay icons */}
         <div className="relative">
           {/* Typing Icons - appear when user is typing */}
-          <AnimatePresence>
-            {isInputTyping && chatInputText.trim() && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.2 }}
-                className="absolute bottom-full right-4 mb-2 flex gap-2 z-10"
-              >
-                {/* Web Search Icon */}
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setSelectedTool(selectedTool === 1 ? 0 : 1)}
-                  className={`rounded-full p-2 shadow-md transition-all duration-200 flex items-center justify-center ${
-                    selectedTool === 1
-                      ? "bg-blue-600 ring-2 ring-blue-400/50 shadow-blue-500/30"
-                      : "bg-blue-500/90 hover:bg-blue-600 hover:shadow-blue-500/20"
-                  } text-white backdrop-blur-sm border border-white/20`}
-                  title={selectedTool === 1 ? "Web search active - click to deactivate" : "Activate web search"}
-                >
-                  <Globe size={16} />
-                </motion.button>
-
-                {/* Supermemory Icon */}
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setSelectedTool(selectedTool === 2 ? 0 : 2)}
-                  className={`rounded-full p-2 shadow-md transition-all duration-200 flex items-center justify-center ${
-                    selectedTool === 2
-                      ? "bg-purple-600 ring-2 ring-purple-400/50 shadow-purple-500/30"
-                      : "bg-purple-500/90 hover:bg-purple-600 hover:shadow-purple-500/20"
-                  } text-white backdrop-blur-sm border border-white/20`}
-                  title={selectedTool === 2 ? "Supermemory active - click to deactivate" : "Activate supermemory"}
-                >
-                  <Brain size={16} />
-                </motion.button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          
 
           <div className="h-[50px]  text-foreground bg-background relative flex items-center shrink-0">
             <div className="relative h-full">
@@ -761,59 +802,132 @@ export const ChatView = ({
                 </div>
               )} */}
             </div>
-            <div className="w-full h-full py-1 pl-1">
-              <div className="relative size-full dark:bg-zinc-950 focus-within:dark:bg-zinc-950 rounded-lg transition-all duration-100 border-2 dark:border-zinc-950 focus-within:dark:border-zinc-900">
-              <input
-                type="text"
-                value={chatInputText}
-                autoFocus
-                onChange={(e) => {
-                  setChatInputText(e.target.value);
-                  setIsInputTyping(e.target.value.length > 0);
-                }}
-                onPaste={handlePaste}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && chatInputText.trim())
-                    handleSendMessage();
-                }}
-                placeholder={attachedImage ? "Describe what you want to know about this image..." : "Enter your message or paste a screenshot"}
-                className="w-full px-4 dark:focus:placeholder:text-zinc-400/0 placeholder:transition-colors h-full bg-transparent text-foreground placeholder:text-foreground/50 text-sm outline-none pr-12"
-              />
-
-              {/* Image attachment indicator */}
+            <div className="h-full w-fit relative  flex items-center p-1 ">
               <AnimatePresence>
-                {imagePreview && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                  >
-                    <div className="relative group">
-                      <img
-                        src={imagePreview}
-                        alt="Attached screenshot"
-                        className="w-6 h-6 object-cover rounded  cursor-pointer"
-                        title="Screenshot attached - Click to remove"
-                        onClick={clearImage}
-                      />
-                      <button
-                        onClick={clearImage}
-                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-3 h-3 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Remove image"
+                {optionsOpen && (
+                  <>
+                    <motion.div
+                      initial={{ opacity: 0, scaleX: 0.9, scaleY: 0.95 }}
+                      animate={{
+                        opacity: 1,
+                        scaleX: 1,
+                        scaleY: 1,
+                        // y: optionsOpen ? 0 : 10,
+                      }}
+                      exit={{
+                        opacity: 0,
+                        scaleX: 0.9,
+                        scaleY: 0.95,
+                      }}
+                      style={{
+                        transformOrigin: "bottom left",
+                      }}
+                      transition={{
+                        duration: 0.2,
+                        ease: "circInOut",
+                      }}
+                      className="dark:bg-zinc-950 overflow-hidden rounded-lg absolute w-[200px]  bottom-full flex flex-col "
+                    >
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-fit p-1 flex flex-col gap-1"
                       >
-                        ×
-                      </button>
-                    </div>
-                  </motion.div>
+                        <Option
+                          active={selectedTool === 1}
+                          onClick={() =>
+                            setSelectedTool(selectedTool === 1 ? 0 : 1)
+                          }
+                          icon={<GlobeSimpleIcon className="text-lg" />}
+                        >
+                          {/* <GlobeSimpleIcon className="text-lg" /> */}
+                          Web Search
+                        </Option>
+                        <Option
+                          active={selectedTool === 2}
+                          onClick={() =>
+                            setSelectedTool(selectedTool === 2 ? 0 : 2)
+                          }
+                          icon={<BrainIcon className="text-lg" />}
+                        >
+                          {/* <BrainIcon className="text-lg" /> */}
+                          Super Memory
+                        </Option>
+                        <button className="flex gap-2 text-sm w-full transition-colors duration-100 px-2 py-1 dark:text-zinc-400 font-medium hover:dark:text-white hover:dark:bg-zinc-900 rounded-md items-center">
+                          <GearSixIcon className="text-lg" />
+                          More Settings
+                        </button>
+                      </div>
+                    </motion.div>
+                  </>
                 )}
               </AnimatePresence>
+              <OverlayButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOptionsOpen((v) => !v);
+                }}
+                className="dark:bg-zinc-950"
+                title="Options"
+              >
+                <SlidersHorizontalIcon weight="bold" />
+              </OverlayButton>
             </div>
+            <div className="w-full h-full py-1 ">
+              <div className="relative size-full dark:bg-zinc-950 focus-within:dark:bg-zinc-950 rounded-lg transition-all duration-100 border-2 dark:border-zinc-950 focus-within:dark:border-zinc-900">
+                <input
+                  type="text"
+                  value={chatInputText}
+                  autoFocus
+                  onChange={(e) => {
+                    setChatInputText(e.target.value);
+                    setIsInputTyping(e.target.value.length > 0);
+                  }}
+                  onPaste={handlePaste}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && chatInputText.trim())
+                      handleSendMessage();
+                  }}
+                  placeholder={
+                    attachedImage
+                      ? "Describe what you want to know about this image..."
+                      : "Enter your message or paste a screenshot"
+                  }
+                  className="w-full px-4 dark:focus:placeholder:text-zinc-400/0 placeholder:transition-colors h-full bg-transparent text-foreground placeholder:text-foreground/50 text-sm outline-none pr-12"
+                />
+
+                {/* Image attachment indicator */}
+                <AnimatePresence>
+                  {imagePreview && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                    >
+                      <div className="relative group">
+                        <img
+                          src={imagePreview}
+                          alt="Attached screenshot"
+                          className="w-6 h-6 object-cover rounded  cursor-pointer"
+                          title="Screenshot attached - Click to remove"
+                          onClick={clearImage}
+                        />
+                        <button
+                          onClick={clearImage}
+                          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-3 h-3 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Remove image"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
             <div className="h-full w-fit  flex items-center p-1 ">
               <OverlayButton
                 onClick={handleSendMessage}
-               
                 className="dark:bg-zinc-950"
                 title="Send message"
               >
