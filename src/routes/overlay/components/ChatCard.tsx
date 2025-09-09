@@ -9,7 +9,7 @@ import { emit } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { useUserStore } from "@/store/userStore";
-import { useChatStore } from "@/store/chatStore";
+import { ChatMessage, useChatStore } from "@/store/chatStore";
 import {
   Generate,
   GenerateWithWebSearch,
@@ -204,10 +204,12 @@ export const ChatView = ({
     message,
     newConvo,
     conversationId,
+
     provider,
     modelName,
     image,
-    tool
+    tool,
+    newMessages
   ) => {
     // Streaming block
     setStreamingMsg("");
@@ -254,7 +256,11 @@ export const ChatView = ({
             setStreamingMsg("");
             setCurrResponse(fullText);
             // Add final message to chat
-            setMessages([...messages, { sender: "ai", text: fullText, image: "" }]);
+            // Only append AI message, do not overwrite user message
+            setMessages([
+              ...newMessages,
+              { sender: "ai", text: fullText, image: "" },
+            ]);
             return {
               success: true,
               data: fullText,
@@ -270,7 +276,7 @@ export const ChatView = ({
 
     setStreamingMsg("");
     setCurrResponse(fullText);
-  setMessages([...messages, { sender: "ai", text: fullText, image: "" }]);
+    // setMessages([...messages, { sender: "ai", text: fullText, image: "" }]);
     return {
       success: true,
       data: fullText,
@@ -301,13 +307,15 @@ export const ChatView = ({
       if (imageToSend == "") {
         await handleStreamAIResponse(
           email,
+
           userMsg,
           overlayConvoId === -1,
           overlayConvoId,
           currentModel.label,
           currentModel.value,
           "",
-          selectedTool
+          selectedTool,
+          newMessages
         );
       } else {
         ai_res = await Generate({
@@ -738,7 +746,7 @@ export const ChatView = ({
           <AnimatePresence mode="popLayout">
             {isAIThinking && (
               <motion.div
-                className="flex gap-2 mt-2 mx-4 dark:text-zinc-200  font-medium items-center text-sm h-fit"
+                className="flex gap-2 mt-2 mx-2 dark:text-zinc-200  font-medium items-center text-sm h-fit"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.2 }}
