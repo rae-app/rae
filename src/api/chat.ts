@@ -5,7 +5,7 @@
 
 import axios from "axios";
 
-export const BASE_URL = "http://localhost:8000/api";
+export const BASE_URL = "https://quackback-xwhd.onrender.com/api";
 
 export const Generate = async ({
   email,

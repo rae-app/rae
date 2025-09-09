@@ -250,6 +250,10 @@ export const ChatView = ({
             fullText += data.content;
             setStreamingMsg((prev) => prev + data.content);
           } else if (data.type == "title") {
+            if (overlayConvoId === -1) {
+              setOverlayChatTitle(data.title);
+              setOverlayConvoId(data.conversationId);
+            }
             // Optionally handle title
           } else if (data.type === "done") {
             // Stream complete
