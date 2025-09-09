@@ -367,6 +367,14 @@ const Overlay = () => {
         setIsPinned(false);
       }),
 
+      listen("unpin_for_center", () => {
+        setIsPinned(false);
+        if (notchTimeoutRef.current) {
+          clearTimeout(notchTimeoutRef.current);
+          notchTimeoutRef.current = null;
+        }
+      }),
+
       listen("gradient_changed", (event) => {
         console.log("OverlayCard: gradient_changed event received:", event.payload);
         const gradient = event.payload as { gradient: boolean };
@@ -739,7 +747,7 @@ const Overlay = () => {
             onClick={() => setIsActive(!isActive)}
             draggable={!isPinned}
           >
-            <div className="relative flex items-center justify-center w-4 h-4">
+            <div className="relative flex items-center justify-center w-3 h-3">
               <motion.div
                 animate={
                   isActive
@@ -757,7 +765,7 @@ const Overlay = () => {
                   repeat: isActive ? Infinity : 0,
                   ease: "easeInOut",
                 }}
-                className={`w-2 h-2 rounded-full ${
+                className={`w-1.5 h-1.5 rounded-full ${
                   isActive
                     ? "bg-gradient-to-br from-red-400 to-red-500 shadow-lg shadow-red-400/60 ring-1 ring-red-300/30"
                     : "bg-gray-400 shadow-gray-400/30"
@@ -774,7 +782,7 @@ const Overlay = () => {
                     repeat: Infinity,
                     ease: "easeOut",
                   }}
-                  className="absolute size-4 bg-red-400/20 rounded-full blur-sm"
+                  className="absolute size-3 bg-red-400/20 rounded-full blur-sm"
                 />
               )}
               {isActive && (
@@ -789,7 +797,7 @@ const Overlay = () => {
                     ease: "easeOut",
                     delay: 0.3,
                   }}
-                  className="absolute size-6 bg-red-400/10 rounded-full blur-md"
+                  className="absolute size-5 bg-red-400/10 rounded-full blur-md"
                 />
               )}
             </div>
@@ -970,7 +978,7 @@ const Overlay = () => {
                     repeat: isActive ? Infinity : 0,
                     ease: "easeInOut",
                   }}
-                  className={`size-3 rounded-full ${
+                  className={`w-1.5 h-1.5 rounded-full ${
                     isActive
                       ? "bg-gradient-to-br from-red-400 to-red-500 shadow-xl shadow-red-400/70 ring-2 ring-red-300/40"
                       : "bg-gray-400 shadow-gray-400/30"
@@ -987,7 +995,7 @@ const Overlay = () => {
                       repeat: Infinity,
                       ease: "easeOut",
                     }}
-                    className="absolute w-8 h-8 bg-red-400/25 rounded-full -ml-2.5 blur-sm"
+                    className="absolute size-3 bg-red-400/25 rounded-full -ml-1.5 blur-sm"
                   />
                 )}
                 {isActive && (
@@ -1002,7 +1010,7 @@ const Overlay = () => {
                       ease: "easeOut",
                       delay: 0.5,
                     }}
-                    className="absolute w-10 h-10 bg-red-400/15 rounded-full -ml-3 blur-lg"
+                    className="absolute size-5 bg-red-400/15 rounded-full -ml-2.5 blur-lg"
                   />
                 )}
               </div>
@@ -1052,5 +1060,4 @@ const Overlay = () => {
     </div>
   );
 };
-
 export default Overlay;

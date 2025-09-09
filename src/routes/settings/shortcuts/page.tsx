@@ -27,7 +27,7 @@ export default function ShortcutsPage(): JSX.Element {
           </p>
         </header>
         <Card>
-          <SectionHeader title={"Shorcuts"} />
+          <SectionHeader title={"Shortcuts"} />
           <div className="flex flex-col divide-y divide-border">
             {shortcuts.map((shortcut) => {
               return (

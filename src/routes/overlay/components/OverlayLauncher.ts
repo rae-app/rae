@@ -40,6 +40,7 @@ export const LaunchOverlayWindow = async () => {
       fullscreen: false,
       maximizable: false,
     
+      skipTaskbar: true, //that's all
     });
 
     // Set up event listeners

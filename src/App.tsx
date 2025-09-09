@@ -19,6 +19,8 @@ import {
 import {
   MAGIC_DOT_TOGGLE_COMBO,
   MAGIC_DOT_TOGGLE_COOLDOWN_MS,
+  SHOW_OVERLAY_CENTER_COMBO,
+  SHOW_OVERLAY_CENTER_COOLDOWN_MS,
 } from "./constants/shortcuts";
 import Landing from "./routes/app/landing/page";
 import Overlay from "./routes/overlay/components/OverlayCard";
@@ -74,7 +76,44 @@ function App() {
           }
         });
         const ok = await isRegistered(combo);
-        console.log("Registered global shortcut:", combo, ok);
+      } catch (e) {
+        console.error("Failed to register global shortcut", e);
+      }
+    };
+    setup();
+    return () => {
+      unregister(combo).catch(() => {});
+    };
+  }, []);
+
+  // Register Ctrl+M shortcut to show overlay in center
+  useEffect(() => {
+    const combo = SHOW_OVERLAY_CENTER_COMBO;
+    const cooldownMs = SHOW_OVERLAY_CENTER_COOLDOWN_MS;
+    let lastFired = 0;
+    const setup = async () => {
+      try {
+        try {
+          if (await isRegistered(combo)) {
+            await unregister(combo);
+          }
+        } catch (e) {
+          console.warn("isRegistered/unregister failed; continuing", e);
+        }
+        await register(combo, async () => {
+          console.log("Global shortcut pressed:", combo);
+          const now = Date.now();
+          if (now - lastFired < cooldownMs) {
+            return;
+          }
+          lastFired = now;
+          try {
+            await invoke("center_overlay_bar");
+          } catch (e) {
+            console.error("Failed to show overlay center", e);
+          }
+        });
+        const ok = await isRegistered(combo);
       } catch (e) {
         console.error("Failed to register global shortcut", e);
       }

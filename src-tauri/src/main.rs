@@ -27,6 +27,7 @@ fn main() {
             functions::overlay::toggle_magic_dot,
             functions::overlay::set_magic_dot_creation_enabled,
             functions::overlay::show_magic_dot,
+            // functions::overlay::show_overlay_center,
             functions::chat::set_auto_show_on_copy_enabled,
             functions::chat::get_auto_show_on_copy_enabled,
             functions::chat::set_auto_show_on_selection_enabled,

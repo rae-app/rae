@@ -5,7 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Loader2, MessageCircle, Globe, Brain } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
-import animatedUnscreenGif from "../../../assets/animated-gifs01-unscreen.gif";
+import thinkingGif from "../../../assets/thinking.gif";
 import ChatSidebarButton from "./components/ChatSidebarButton";
 import { useUserStore } from "@/store/userStore";
 import { useChatStore } from "@/store/chatStore";
