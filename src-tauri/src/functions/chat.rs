@@ -245,13 +245,11 @@ fn ensure_rae_watcher_started(app: &AppHandle) {
 
             let mut typed_chars = VecDeque::new();
             let mut last_key_time = std::time::Instant::now();
-            let mut hook_handle: HHOOK = std::ptr::null_mut();
-
             // We need to pass the app_handle to the hook procedure somehow
             // Since we can't capture it in the extern "system" function, we'll use a different approach
 
             // Store a reference to check if watcher is still enabled
-            let watcher_enabled = &RAE_WATCHER_ENABLED;
+            let _watcher_enabled = &RAE_WATCHER_ENABLED;
             let app_for_emit = app_handle.clone();
 
             unsafe extern "system" fn keyboard_hook_proc(

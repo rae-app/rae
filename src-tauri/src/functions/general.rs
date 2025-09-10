@@ -2,7 +2,7 @@ use crate::platform::{
     exe_path_from_hwnd, get_icon_base64_from_exe, get_packaged_app_icon_from_hwnd,
     get_window_icon_base64_from_hwnd, get_window_title,
 };
-use base64::encode;
+use base64::{Engine as _, engine::general_purpose};
 use image::{DynamicImage, ImageFormat};
 use std::collections::HashMap;
 use std::io;
@@ -263,7 +263,7 @@ pub fn capture_window_screenshot() -> Result<String, String> {
         DeleteDC(memory_dc);
         ReleaseDC(std::ptr::null_mut(), screen_dc);
 
-        let base64_data = encode(&png_data);
+        let base64_data = general_purpose::STANDARD.encode(&png_data);
         Ok(format!("data:image/png;base64,{}", base64_data))
     }
 }
@@ -388,7 +388,7 @@ fn capture_hwnd_to_png_base64(hwnd: WinHWND) -> Result<String, String> {
         DeleteDC(memory_dc);
         ReleaseDC(hwnd, window_dc);
 
-        let base64_data = encode(&png_data);
+        let base64_data = general_purpose::STANDARD.encode(&png_data);
         Ok(format!("data:image/png;base64,{}", base64_data))
     }
 }
@@ -412,11 +412,9 @@ pub fn capture_window_screenshot_by_title(window_title: String) -> Result<String
 
 #[tauri::command]
 pub fn capture_window_screenshot_by_hwnd(hwnd: isize) -> Result<String, String> {
-    unsafe {
-        let hwnd_ptr = hwnd as WinHWND;
-        if hwnd_ptr.is_null() {
-            return Err("Invalid HWND".to_string());
-        }
-        capture_hwnd_to_png_base64(hwnd_ptr)
+    let hwnd_ptr = hwnd as WinHWND;
+    if hwnd_ptr.is_null() {
+        return Err("Invalid HWND".to_string());
     }
+    capture_hwnd_to_png_base64(hwnd_ptr)
 }

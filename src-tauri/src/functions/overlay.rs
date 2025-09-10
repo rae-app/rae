@@ -470,3 +470,11 @@ pub fn show_magic_dot(app: AppHandle) {
 pub fn set_magic_dot_creation_enabled(enabled: bool) {
     ALLOW_MAGIC_DOT_CREATE.store(enabled, Ordering::Relaxed);
 }
+
+#[tauri::command]
+pub fn close_overlay_window(app: AppHandle) {
+    if let Some(window) = app.get_webview_window("overlay") {
+        println!("Closing overlay window...");
+        let _ = window.close();
+    }
+}

@@ -402,6 +402,13 @@ const Overlay = () => {
         setTimeout(() => {
           DISABLE_SAFETY_NOTCH.current = false;
         }, 30000);
+      }),
+
+      // Listen for main window close to clean up overlay
+      listen("main-window-closed", () => {
+        console.log("OverlayCard: Main window closed, cleaning up overlay...");
+        // Clean up any overlay-specific state here if needed
+        // The backend will handle closing the overlay window
       })
     ];
 
