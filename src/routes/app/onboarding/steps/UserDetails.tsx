@@ -60,7 +60,7 @@ const Name: React.FC<NameProps> = ({ onNext }) => {
           className="w-full"
           // className="no-drag w-full py-2 rounded-xl bg-black flex justify-center items-center text-white font-medium shadow-md hover:scale-105 transition"
         >
-          {loading ? <Loader className="animate-spin" /> : "Continue"}
+          {loading ? <div className="w-full flex items-center justify-center " ><Loader className="animate-spin"  /></div> : "Continue"}
         </Button>
       </div>
     </div>
