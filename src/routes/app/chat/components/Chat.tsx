@@ -17,7 +17,7 @@ import {
   GlobeSimpleIcon,
   BrainIcon,
 } from "@phosphor-icons/react";
-
+import { useUserStore } from "@/store/userStore";
 const defaultModels = [
   { label: "OpenAi", value: "gpt-4o-mini" },
   { label: "OpenAi", value: "gpt-4o" },
@@ -214,7 +214,7 @@ const Chat: React.FC<ChatProps> = ({
               animate={{ opacity: 1 }}
               className="text-3xl text-zinc-200 font-semibold"
             >
-              Welcome Back
+              Welcome Back {name?.split(" ")[0]}
             </motion.div>
             <motion.div
               initial={{ width: "70%", height: "100px" }}

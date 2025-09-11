@@ -22,16 +22,6 @@ export const shortcuts : Shortcut[] = [
     },
     {
         combo: ["Ctrl", "M"],
-        title: "Show overlay in center",
-        description: "Show the overlay bar in the center of the screen"
-    },
-    {
-        combo: ["Ctrl", "D"],
-        title: "Toggle dock mode",
-        description: "Dock or undock the overlay window"
-    },
-    {
-        combo: ["Ctrl", "M"],
         title: "Center overlay bar",
         description: "Move overlay bar to center of screen"
     },
@@ -39,10 +29,6 @@ export const shortcuts : Shortcut[] = [
         combo: ["Ctrl", "P"],
         title: "Toggle pin mode",
         description: "Pin or unpin the overlay bar"
-    },
-    {
-        combo: ["Ctrl", "Shift", "Enter"],
-        title: "Open chat",
-        description: "Open the chat in the overlay window"
     }
+   
 ]
