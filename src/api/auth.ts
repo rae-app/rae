@@ -44,10 +44,22 @@ export const Login = async (
       message: res.data.message || "Login successful.",
     };
   } catch (err: any) {
-    const message =
-      err.response?.data?.message ||
-      err.message ||
-      "Login failed. Try again later.";
+    const raw = err.response?.data?.message || err.message || "";
+    let message = raw || "Login failed. Try again later.";
+
+    // Normalize backend errors to a user-friendly message for missing users
+    const status = err.response?.status;
+    const lower = String(raw).toLowerCase();
+    if (
+      status === 404 ||
+      status === 500 ||
+      lower.includes("no rows returned") ||
+      lower.includes("multiple or no rows returned") ||
+      lower.includes("json error")
+    ) {
+      message = "No account found for this email. Please sign up.";
+    }
+
     return {
       success: false,
       message,
