@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import {
   smoothResize,
   pinMagicDot,
@@ -9,7 +10,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { OverlayButton } from "./OverlayComponents";
 import { ChatView } from "./ChatCard";
-import { Pin, X, Mic, Maximize, Palette } from "lucide-react";
+import { Pin, X, Mic, Maximize, Palette, MessageSquare, Settings, FileText, Minimize2, Maximize2 } from "lucide-react";
 import notchSound from "../../../assets/sounds/bubble-pop-06-351337.mp3";
 import gradientGif from "../../../assets/gradient.gif";
 import { invoke } from "@tauri-apps/api/core";
@@ -115,6 +116,9 @@ const Overlay = () => {
   const [initialAttachedImage, setInitialAttachedImage] = useState<
     string | undefined
   >();
+  // Maximize state
+  const [isMaximized, setIsMaximized] = useState(false);
+  const [currentPage, setCurrentPage] = useState("chat");
 
   // Refs for dragging and notch timeout
   const notchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -202,14 +206,38 @@ const Overlay = () => {
     };
   }, []);
 
-  // Effect to handle resizing when chat is opened/closed
+  // Effect to handle resizing when chat is opened/closed or maximized
   useEffect(() => {
-    if (showChat) {
-      resize(500, 480); // check this if working with ui
-    } else {
-      resize(500, 60); // this also 
+    if (!showChat) {
+      resize(500, 60);
+    } else if (showChat && isMaximized) {
+      // Full screen for maximized state
+      const makeFullscreen = async () => {
+        try {
+          const win = await getCurrentWebviewWindow();
+          await win.setFullscreen(true);
+        } catch (error) {
+          console.error("Failed to enter fullscreen:", error);
+          // Fallback to large window size
+          resize(1600, 1000);
+        }
+      };
+      makeFullscreen();
+    } else if (showChat && !isMaximized) {
+      // Exit fullscreen when minimizing
+      const exitFullscreen = async () => {
+        try {
+          const win = await getCurrentWebviewWindow();
+          await win.setFullscreen(false);
+        } catch (error) {
+          console.error("Failed to exit fullscreen:", error);
+        }
+      };
+      exitFullscreen();
+      // Normal chat size
+      resize(500, 580);
     }
-  }, [showChat]);
+  }, [showChat, isMaximized]);
 
   const [chatOpen, setChatOpen] = useState(false);
   const [notchWindowDisplayEnabled, setNotchWindowDisplayEnabled] = useState(false);
@@ -763,6 +791,17 @@ const Overlay = () => {
                 y: -10,
                 borderRadius: "0 0 28px 28px",
               }
+            : showChat && isMaximized
+            ? {
+                scale: 1,
+                y: 0,
+                borderRadius: "0px",
+                width: "100vw",
+                height: "100vh",
+                x: 0,
+                top: 0,
+                left: 0,
+              }
             : {
                 scale: 1,
                 y: 0,
@@ -1030,13 +1069,52 @@ const Overlay = () => {
               <PushPinIcon weight={isPinned ? "fill" : "bold"} />
             </OverlayButton>
             {showChat ? (
-              <OverlayButton
-                onClick={handleCloseChatClick}
-                title="Close chat"
-                draggable={!isPinned}
-              >
-                <X size={16} />
-              </OverlayButton>
+              <>
+                {isMaximized && (
+                  <div className="flex items-center gap-1 mr-1">
+                    {/* Navigation buttons for maximized state */}
+                    <OverlayButton
+                      onClick={() => setCurrentPage("chat")}
+                      active={currentPage === "chat"}
+                      title="Chat"
+                      draggable={!isPinned}
+                    >
+                      <MessageSquare size={16} />
+                    </OverlayButton>
+                    <OverlayButton
+                      onClick={() => setCurrentPage("settings")}
+                      active={currentPage === "settings"}
+                      title="Settings"
+                      draggable={!isPinned}
+                    >
+                      <Settings size={16} />
+                    </OverlayButton>
+                    <OverlayButton
+                      onClick={() => setCurrentPage("notes")}
+                      active={currentPage === "notes"}
+                      title="Notes"
+                      draggable={!isPinned}
+                    >
+                      <FileText size={16} />
+                    </OverlayButton>
+                  </div>
+                )}
+                <OverlayButton
+                  onClick={() => setIsMaximized(!isMaximized)}
+                  active={isMaximized}
+                  title={isMaximized ? "Minimize" : "Maximize"}
+                  draggable={!isPinned}
+                >
+                  {isMaximized ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                </OverlayButton>
+                <OverlayButton
+                  onClick={handleCloseChatClick}
+                  title="Close chat"
+                  draggable={!isPinned}
+                >
+                  <X size={16} />
+                </OverlayButton>
+              </>
             ) : (
               <OverlayButton
                 onClick={handleOpenChat}
@@ -1145,7 +1223,6 @@ const Overlay = () => {
           {chatOpen && (
             <ChatView
               setChatOpen={setChatOpen}
-
               onClose={handleCloseChatClick}
               initialMessage={initialChatMessage}
               initialAttachedImage={initialAttachedImage}
@@ -1154,9 +1231,11 @@ const Overlay = () => {
               setShowChat={setShowChat}
               windowName={windowName}
               windowIcon={windowIcon}
-
               windowScreenshot={windowScreenshot}
               isActive={isActive}
+              isMaximized={isMaximized}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
             />
           )}
         </AnimatePresence>

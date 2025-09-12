@@ -431,7 +431,7 @@ pub fn show_magic_dot(app: AppHandle) {
         .resizable(false)
         .shadow(false)
         .always_on_top(true)
-        .inner_size(500.0, 60.0)
+        .inner_size(600.0, 60.0)
         .effects(WindowEffectsConfig {
             effects: vec![Effect::Acrylic],
             state: None,

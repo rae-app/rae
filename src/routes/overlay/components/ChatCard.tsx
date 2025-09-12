@@ -74,6 +74,9 @@ interface ChatViewProps {
   setExpandedChat?: (expanded: boolean) => void;
   windowScreenshot?: string;
   isActive?: boolean;
+  isMaximized?: boolean;
+  currentPage?: string;
+  setCurrentPage?: (page: string) => void;
 }
 
 const Option = ({
@@ -164,9 +167,11 @@ export const ChatView = ({
   smoothResize,
   windowName,
   windowIcon,
-
   windowScreenshot,
   isActive,
+  isMaximized = false,
+  currentPage = "chat",
+  setCurrentPage,
 }: ChatViewProps) => {
   const { email } = useUserStore();
   const {
@@ -634,6 +639,42 @@ export const ChatView = ({
 
   const [optionsOpen, setOptionsOpen] = useState(false);
 
+  // Simple page components for maximized state
+  const renderPageContent = () => {
+    switch (currentPage) {
+      case "chat":
+        return null; // Return null to show the regular chat content
+      case "settings":
+        return (
+          <div className={`p-4 text-foreground ${isMaximized ? 'w-screen h-screen' : 'flex-1'}`}>
+            <h2 className="text-xl font-semibold mb-4">Settings</h2>
+            <div className="space-y-4">
+              <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+                <h3 className="font-medium">Preferences</h3>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">Configure your app preferences here</p>
+              </div>
+              <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+                <h3 className="font-medium">Shortcuts</h3>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">Manage keyboard shortcuts</p>
+              </div>
+            </div>
+          </div>
+        );
+      case "notes":
+        return (
+          <div className={`p-4 text-foreground ${isMaximized ? 'w-screen h-screen' : 'flex-1'}`}>
+            <h2 className="text-xl font-semibold mb-4">Notes</h2>
+            <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+              <h3 className="font-medium">Your Notes</h3>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">Access and manage your notes</p>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <motion.div
       onClick={() => {
@@ -644,10 +685,19 @@ export const ChatView = ({
       exit={{ y: "-100%" }}
       transition={{ duration: animations.overlayChat, ease: "circInOut" }}
       ref={chatContainerRef}
-      className="no-drag flex flex-col overflow-hidden  relative min-h-[400px] z-[1000] rounded-xl shadow-lg mt-2"
+      className={`no-drag flex flex-col h-screen w-full overflow-hidden relative z-[1000] rounded-xl shadow-lg mt-2 ${
+        isMaximized ? 'min-h-[95vh]' : 'min-h-[400px]'
+      }`}
     >
-      <div className="flex-1 flex flex-col overflow-hidden text-foreground dark:bg-[#010101] bg-white min-h-[300px] relative transition-all duration-200">
-        {/* Chat header */}
+      <div className={`flex-1 flex flex-col text-foreground dark:bg-[#010101] bg-white relative transition-all duration-200 ${
+        isMaximized ? 'w-screen h-screen' : 'min-h-[300px]'
+      }`}>
+        {/* Render page content for maximized state or chat header */}
+        {isMaximized && currentPage !== "chat" ? (
+          renderPageContent()
+        ) : (
+          <>
+            {/* Chat header */}
         <div className="h-fit items-center border-b-2 overflow-hidden border-b-border/20 w-full flex">
           <div className="h-full w-full flex justify-between items-center p-2 tracking-tight font-medium">
             <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1049,8 +1099,10 @@ export const ChatView = ({
                 <ArrowElbowDownLeftIcon weight="bold" />
               </OverlayButton>
             </div>
+            </div>
           </div>
-        </div>
+          </>
+        )}
       </div>
     </motion.div>
   );
