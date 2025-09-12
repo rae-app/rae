@@ -843,7 +843,7 @@ const Overlay = () => {
             opacity: { duration: 0.2, ease: "easeOut" },
             y: { duration: 0.3, ease: "easeOut" },
           }}
-          className={`flex items-center z-[100000] dark:bg-[#010101] bg-white  ${isMaximized? 'max-w-[400px] mx-auto' : 'w-full'} px-6 h-[44px] shrink-0 ${
+          className={`flex items-center z-[100000] dark:bg-[#010101] bg-white  ${isMaximized? 'max-w-[400px] mx-auto gap-4 ' : 'w-full'}  h-[44px] shrink-0 ${
             !isPinned ? "drag" : ""
           } ${isNotch ? "pointer-events-none" : ""}`}
           style={{  borderRadius: "12px" }}
@@ -918,7 +918,7 @@ const Overlay = () => {
               !isPinned ? "drag" : ""
             } flex-1 h-full flex items-center w-full`}
           >
-            {!showChat ? (
+            {!showChat && !isMaximized ? (
               inputActive ? (
                 <div
                   className={`relative flex w-full h-full items-center border-l border-border px-4 py-2 ${
@@ -995,7 +995,7 @@ const Overlay = () => {
                   </span>
                 </div>
               )
-            ) : isActive ? (
+            ) : (isActive && !isMaximized) ? (
               <div
                 className={`flex ${
                   !isPinned ? "drag" : ""
@@ -1050,29 +1050,34 @@ const Overlay = () => {
                 <ArrowElbowDownLeftIcon weight="bold" />
               </OverlayButton>
             )}
-            <OverlayButton
-              onClick={() => {setMicOn(v => !v)}}
-              active={micOn}
-              title="Voice"
-              draggable={!micOn}
-              className={micOn ? "!text-[#ffe941] dark:!text-surface " : ""}
-            >
-              <MicrophoneIcon weight={micOn ? "fill" : "bold"} />
-            </OverlayButton>
-            <OverlayButton
-              onClick={handlePinClick}
-              active={isPinned}
-              title="Pin"
-              draggable={!isPinned}
-              className={isPinned ? "!text-[#ffe941] dark:!text-surface" : ""}
-            >
-              <PushPinIcon weight={isPinned ? "fill" : "bold"} />
-            </OverlayButton>
+            {/* Hide voice and pin buttons in maximized state */}
+            {!isMaximized && (
+              <>
+                <OverlayButton
+                  onClick={() => {setMicOn(v => !v)}}
+                  active={micOn}
+                  title="Voice"
+                  draggable={!isPinned}
+                  className={micOn ? "!text-[#ffe941] dark:!text-surface " : ""}
+                >
+                  <MicrophoneIcon weight={micOn ? "fill" : "bold"} />
+                </OverlayButton>
+                <OverlayButton
+                  onClick={handlePinClick}
+                  active={isPinned}
+                  title="Pin"
+                  draggable={!isPinned}
+                  className={isPinned ? "!text-[#ffe941] dark:!text-surface" : ""}
+                >
+                  <PushPinIcon weight={isPinned ? "fill" : "bold"} />
+                </OverlayButton>
+              </>
+            )}
             {showChat ? (
               <>
                 {isMaximized && (
                   <div className="flex items-center gap-1 mr-1">
-                    {/* Navigation buttons for maximized state */}
+                    {/* Navigation buttons for maximized state - centered */}
                     <OverlayButton
                       onClick={() => setCurrentPage("chat")}
                       active={currentPage === "chat"}
