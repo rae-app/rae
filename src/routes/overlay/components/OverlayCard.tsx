@@ -111,6 +111,7 @@ const Overlay = () => {
   const [assistMessage, setAssistMessage] = useState(
     "Hello! Assist mode is now active. How can I help you?",
   );
+  const [audioClientActive, setAudioClientActive] = useState(false);
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isActive, setIsActive] = useState<boolean>(
@@ -514,6 +515,159 @@ const Overlay = () => {
       );
     };
   }, []);
+
+  // Handle assist mode changes - start/stop audio client
+  useEffect(() => {
+    const handleAssistModeChange = async () => {
+      if (assist && !audioClientActive) {
+        try {
+          console.log("🎤 Starting audio client for assist mode...");
+          setAssistMessage("🔄 Connecting to audio service...");
+
+          // Check if audio client is already running
+          const isRunning = await invoke("is_audio_client_running");
+          console.log("Audio client status:", isRunning);
+
+          if (!isRunning) {
+            await invoke("start_audio_client");
+            console.log("✅ Audio client command sent");
+          }
+
+          setAudioClientActive(true);
+
+          // Give it time to initialize
+          setTimeout(() => {
+            setAssistMessage("🎤 Listening... Speak to interact with Rae.");
+            console.log("✅ Audio client should be active now");
+          }, 2000);
+        } catch (error) {
+          console.error("❌ Failed to start audio client:", error);
+          setAssistMessage("❌ Failed to start audio service");
+          setAudioClientActive(false);
+
+          // Retry after 3 seconds
+          setTimeout(() => {
+            if (assist) {
+              setAssistMessage("🔄 Retrying audio connection...");
+              handleAssistModeChange();
+            }
+          }, 3000);
+        }
+      } else if (!assist && audioClientActive) {
+        console.log("🔇 Assist mode disabled, stopping audio client...");
+        try {
+          await invoke("stop_audio_client");
+          console.log("✅ Audio client stopped successfully");
+        } catch (error) {
+          console.error("❌ Failed to stop audio client:", error);
+        }
+        setAudioClientActive(false);
+        setAssistMessage(
+          "Hello! Assist mode is now active. How can I help you?",
+        );
+      }
+    };
+
+    handleAssistModeChange();
+  }, [assist, audioClientActive]);
+
+  // Listen for audio responses from backend
+  useEffect(() => {
+    let unlistenAudioResponse: (() => void) | undefined;
+    let responseTimeoutRef: NodeJS.Timeout | null = null;
+    let statusCheckInterval: NodeJS.Timeout | null = null;
+
+    const setupAudioResponseListener = async () => {
+      try {
+        console.log("🔗 Setting up audio response listener...");
+
+        unlistenAudioResponse = await listen("audio_response", (event: any) => {
+          const data = event.payload;
+          console.log("📨 Audio response received:", data);
+
+          // Clear any existing timeout
+          if (responseTimeoutRef) {
+            clearTimeout(responseTimeoutRef);
+          }
+
+          if (data.type === "response.text.delta") {
+            console.log("📝 Delta text:", data.delta);
+            // Update assist message with streaming text
+            setAssistMessage((prev) => {
+              // If this is the first delta, replace the default/listening message
+              if (
+                prev === "🎤 Listening... Speak to interact with Rae." ||
+                prev ===
+                  "Hello! Assist mode is now active. How can I help you?" ||
+                prev === "🔄 Connecting to audio service..." ||
+                prev === "🔄 Retrying audio connection..."
+              ) {
+                return typeof data.delta === "string" ? "💬 " + data.delta : "";
+              }
+              // Otherwise append to existing message
+              return prev + (typeof data.delta === "string" ? data.delta : "");
+            });
+          }
+
+          if (data.type === "response.text.done") {
+            console.log("✅ Response completed");
+            // After response is done, reset to listening state
+            responseTimeoutRef = setTimeout(() => {
+              if (assist && audioClientActive) {
+                setAssistMessage("🎤 Listening... Speak to interact with Rae.");
+              }
+            }, 3000);
+          }
+        });
+
+        console.log("✅ Audio response listener set up successfully");
+
+        // Periodically check if audio client is still running
+        statusCheckInterval = setInterval(async () => {
+          if (assist && audioClientActive) {
+            try {
+              const isRunning = await invoke("is_audio_client_running");
+              console.log("🔍 Audio client status check:", isRunning);
+
+              if (!isRunning) {
+                console.warn(
+                  "⚠️ Audio client stopped unexpectedly, restarting...",
+                );
+                setAssistMessage("🔄 Reconnecting audio service...");
+                await invoke("start_audio_client");
+                setTimeout(() => {
+                  setAssistMessage(
+                    "🎤 Listening... Speak to interact with Rae.",
+                  );
+                }, 2000);
+              }
+            } catch (error) {
+              console.error("❌ Status check failed:", error);
+            }
+          }
+        }, 5000); // Check every 5 seconds
+      } catch (error) {
+        console.error("Failed to setup audio response listener:", error);
+      }
+    };
+
+    if (assist && audioClientActive) {
+      setupAudioResponseListener();
+    }
+
+    return () => {
+      if (unlistenAudioResponse) {
+        console.log("🔗 Cleaning up audio response listener");
+        unlistenAudioResponse();
+      }
+      if (responseTimeoutRef) {
+        clearTimeout(responseTimeoutRef);
+      }
+      if (statusCheckInterval) {
+        clearInterval(statusCheckInterval);
+      }
+    };
+  }, [assist, audioClientActive]);
 
   // Debug keyboard shortcut (Ctrl+Shift+D)
   useEffect(() => {
@@ -1076,13 +1230,22 @@ const Overlay = () => {
               <>
                 <OverlayButton
                   onClick={() => {
+                    console.log("🎛️ Toggling assist mode...", {
+                      currentAssist: assist,
+                      audioClientActive,
+                      willBeActive: !assist,
+                    });
                     setAssist((v) => !v);
                   }}
                   active={assist}
-                  title="Voice"
+                  title={`Voice Assistant ${assist ? "Active" : "Inactive"} - ${audioClientActive ? "Connected" : "Disconnected"}`}
                   // draggable={!isPinned}
                   className={
-                    assist ? "!text-[#ffe941] dark:!text-surface " : ""
+                    assist
+                      ? audioClientActive
+                        ? "!text-[#ffe941] dark:!text-surface animate-pulse"
+                        : "!text-orange-400 dark:!text-orange-300"
+                      : ""
                   }
                 >
                   {assist ? (

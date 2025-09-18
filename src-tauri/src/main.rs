@@ -300,7 +300,9 @@ app.manage(AudioState(Mutex::new(false)));
             functions::app::show_app,
             functions::app::hide_app,
             functions::app::start_following_overlay,
-            audio_client::start_audio_client
+            audio_client::start_audio_client,
+            audio_client::stop_audio_client,
+            audio_client::is_audio_client_running
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
