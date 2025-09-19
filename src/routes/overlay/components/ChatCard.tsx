@@ -41,6 +41,7 @@ import CodeBlock from "@/components/misc/CodeBlock";
 import { animations } from "@/constants/animations";
 import { invoke } from "@tauri-apps/api/core";
 import { useNoteStore } from "@/store/noteStore";
+import { extractInsertableContent, InsertionContext, generateContextAwarePrompt } from "@/utils/textExtraction";
 import animatedUnscreenGif from "../../../assets/animated-gifs01-unscreen.gif";
 // OpenAI logo SVG as a data URL
 const openaiLogo = `data:image/svg+xml;base64,${btoa(`<svg width="721" height="721" viewBox="0 0 721 721" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -89,6 +90,7 @@ interface ChatViewProps {
   smoothResize: (width: number, height: number) => void;
   windowName: string;
   windowIcon: string;
+  windowHwnd: number | null;
   expandedChat?: boolean;
   setExpandedChat?: (expanded: boolean) => void;
   windowScreenshot?: string;
@@ -191,6 +193,7 @@ export const ChatView = ({
   smoothResize,
   windowName,
   windowIcon,
+  windowHwnd,
   windowScreenshot,
   isActive,
   isMaximized = false,
@@ -368,8 +371,20 @@ export const ChatView = ({
 
     const finalImage = manualImage || attachedImage || windowScreenshot || "";
 
-    console.log("🤖 handleAIResponse: Processing message with image:", {
-      message: userMsg,
+    // Create context for smart AI prompting
+    const insertionContext: InsertionContext = {
+      windowName,
+      windowScreenshot: windowScreenshot || undefined,
+    };
+
+    // Enhance the user message with context for better AI responses
+    const contextAwareMessage = generateContextAwarePrompt(userMsg, insertionContext);
+
+    console.log("🤖 handleAIResponse: Processing message with context:", {
+      originalMessage: userMsg,
+      contextAwareMessage: contextAwareMessage,
+      windowName,
+      detectedContext: insertionContext.detectedContext,
       manualImageLength: manualImage?.length || 0,
       attachedImageLength: attachedImage?.length || 0,
       windowScreenshotLength: windowScreenshot?.length || 0,
@@ -380,7 +395,7 @@ export const ChatView = ({
       ...messages,
       {
         sender: "user" as const,
-        text: userMsg,
+        text: userMsg, // Show original message to user
         image: finalImage,
       },
     ];
@@ -396,8 +411,7 @@ export const ChatView = ({
       if (imageToSend == "") {
         await handleStreamAIResponse(
           email,
-
-          userMsg,
+          contextAwareMessage, // Use context-aware message
           overlayConvoId === -1,
           overlayConvoId,
           currentModel.label,
@@ -409,7 +423,7 @@ export const ChatView = ({
       } else {
         ai_res = await Generate({
           email: email,
-          message: userMsg,
+          message: contextAwareMessage, // Use context-aware message
           newConvo: overlayConvoId === -1,
           conversationId: overlayConvoId,
           provider: currentModel.label,
@@ -552,11 +566,19 @@ export const ChatView = ({
   const handleWebSearch = async (userMsg: string, manualImage?: string) => {
     if (!userMsg.trim()) return;
 
+    // Create context for web search
+    const insertionContext: InsertionContext = {
+      windowName,
+      windowScreenshot: windowScreenshot || undefined,
+    };
+    
+    const contextAwareMessage = generateContextAwarePrompt(userMsg, insertionContext);
+
     const newMessages = [
       ...messages,
       {
         sender: "user" as const,
-        text: userMsg,
+        text: userMsg, // Show original message to user
         image: attachedImage || windowScreenshot || "",
       },
     ];
@@ -570,7 +592,7 @@ export const ChatView = ({
     try {
       const ai_res = await GenerateWithWebSearch({
         email: email,
-        message: userMsg,
+        message: contextAwareMessage, // Use context-aware message
         newConvo: overlayConvoId === -1,
         conversationId: overlayConvoId,
         provider: currentModel.label,
@@ -611,11 +633,19 @@ export const ChatView = ({
   const handleSupermemory = async (userMsg: string, manualImage?: string) => {
     if (!userMsg.trim()) return;
 
+    // Create context for supermemory
+    const insertionContext: InsertionContext = {
+      windowName,
+      windowScreenshot: windowScreenshot || undefined,
+    };
+    
+    const contextAwareMessage = generateContextAwarePrompt(userMsg, insertionContext);
+
     const newMessages = [
       ...messages,
       {
         sender: "user" as const,
-        text: userMsg,
+        text: userMsg, // Show original message to user
         image: attachedImage || windowScreenshot || "",
       },
     ];
@@ -629,7 +659,7 @@ export const ChatView = ({
     try {
       const ai_res = await GenerateWithSupermemory({
         email: email,
-        message: userMsg,
+        message: contextAwareMessage, // Use context-aware message
         newConvo: overlayConvoId === -1,
         conversationId: overlayConvoId,
         provider: currentModel.label,
@@ -758,11 +788,51 @@ export const ChatView = ({
   const getCurrentTime = () =>
     new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
+
   const handleInject = async () => {
-    await invoke("inject_text_to_window_by_title", {
-      text: currResponse,
-      windowTitle: windowName,
-    });
+    try {
+      console.log("🔄 Starting injection...");
+      console.log("currResponse:", currResponse);
+      console.log("windowName:", windowName);
+      console.log("windowHwnd:", windowHwnd);
+      
+      if (!windowHwnd) {
+        console.error("❌ No window HWND available");
+        return;
+      }
+      
+      // Create context for smart insertion
+      const insertionContext: InsertionContext = {
+        windowName,
+        windowScreenshot: windowScreenshot || undefined,
+        // Will be auto-detected from windowName
+      };
+      
+      console.log("insertionContext:", insertionContext);
+      
+      const insertableText = extractInsertableContent(currResponse, insertionContext);
+      console.log("🔍 Original currResponse:", currResponse);
+      console.log("🔍 Insertion context:", insertionContext);
+      console.log("🎯 Extracted insertableText:", insertableText);
+      
+      if (!insertableText) {
+        console.warn("⚠️ No insertable text extracted, using original response");
+        await invoke("inject_text_to_window_by_hwnd", {
+          text: currResponse,
+          hwnd: windowHwnd,
+        });
+      } else {
+        console.log("✅ Injecting extracted text");
+        await invoke("inject_text_to_window_by_hwnd", {
+          text: insertableText,
+          hwnd: windowHwnd,
+        });
+      }
+      
+      console.log("✅ Injection completed");
+    } catch (error) {
+      console.error("❌ Injection failed:", error);
+    }
   };
 
   const [optionsOpen, setOptionsOpen] = useState(false);

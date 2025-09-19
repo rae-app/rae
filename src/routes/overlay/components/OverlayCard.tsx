@@ -1397,6 +1397,7 @@ const Overlay = () => {
               setShowChat={setShowChat}
               windowName={windowName}
               windowIcon={windowIcon}
+              windowHwnd={windowHwnd}
               windowScreenshot={windowScreenshot}
               isActive={isActive}
               isMaximized={isMaximized}

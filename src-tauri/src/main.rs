@@ -289,6 +289,7 @@ app.manage(AudioState(Mutex::new(false)));
             functions::stealth::get_stealth_mode_enabled,
             functions::stealth::apply_stealth_mode_to_window,
             functions::general::inject_text_to_window_by_title,
+            functions::general::inject_text_to_window_by_hwnd,
             functions::general::capture_window_screenshot,
             functions::general::capture_window_screenshot_by_title,
             functions::general::capture_window_screenshot_by_hwnd,
