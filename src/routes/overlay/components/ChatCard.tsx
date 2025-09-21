@@ -1055,56 +1055,123 @@ export const ChatView = ({
               )}
               {/* Render all messages except the streaming one */}
               {messages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`p-2 rounded-lg text-sm ${
-                    msg.sender === "user"
-                      ? "bg-foreground dark:bg-zinc-950 dark:text-white font-medium  self-end text-right ml-auto w-fit max-w-[70%]"
-                      : "bg-zinc-200 dark:bg-zinc-950 dark:text-white  self-start text-left w-fit max-w-[85%]"
-                  }`}
-                >
-                  {msg.sender === "ai" ? (
-                    <div className="prose prose-sm max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-pre:hidden prose-code:hidden">
-                      {(() => {
-                        try {
-                          return (
-                            <ReactMarkdown
-                              remarkPlugins={[remarkGfm, remarkBreaks]}
-                              components={{
-                                code: ({
-                                  className,
-                                  children,
-                                  ...props
-                                }: any) => {
-                                  const inline = props.inline;
-                                  return (
-                                    <CodeBlock
-                                      className={className}
-                                      inline={inline}
-                                      {...props}
-                                    >
-                                      {String(children).replace(/\n$/, "")}
-                                    </CodeBlock>
-                                  );
-                                },
-                              }}
-                            >
-                              {msg.text || ""}
-                            </ReactMarkdown>
-                          );
-                        } catch (error) {
-                          console.error("Markdown render error:", error);
-                          return (
-                            <div style={{ whiteSpace: "pre-wrap" }}>
-                              {msg.text}
-                            </div>
-                          );
-                        }
-                      })()}
-                    </div>
-                  ) : (
-                    <div className="px-2 dark:text-zinc-300">{msg.text}</div>
-                  )}
+                <div key={idx} className="w-full flex mb-4">
+                  <div
+                    className={`flex w-full ${
+                      msg.sender === "user" ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`max-w-[85%] ${
+                        msg.sender === "user"
+                          ? "bg-zinc-800 dark:bg-zinc-900 text-white rounded-2xl rounded-br-md px-4 py-3"
+                          : "bg-transparent text-foreground"
+                      }`}
+                    >
+                      {msg.sender === "ai" ? (
+                        <div className="prose prose-base max-w-none text-foreground dark:text-zinc-100 leading-relaxed">
+                          <div className="space-y-3">
+                            {(() => {
+                              try {
+                                return (
+                                  <ReactMarkdown
+                                    remarkPlugins={[remarkGfm, remarkBreaks]}
+                                    components={{
+                                      p: ({ children }) => (
+                                        <p className="mb-3 last:mb-0 leading-7 text-[15px]">
+                                          {children}
+                                        </p>
+                                      ),
+                                      h1: ({ children }) => (
+                                        <h1 className="text-xl font-semibold mb-3 mt-6 first:mt-0 text-foreground dark:text-white">
+                                          {children}
+                                        </h1>
+                                      ),
+                                      h2: ({ children }) => (
+                                        <h2 className="text-lg font-semibold mb-3 mt-5 first:mt-0 text-foreground dark:text-white">
+                                          {children}
+                                        </h2>
+                                      ),
+                                      h3: ({ children }) => (
+                                        <h3 className="text-base font-semibold mb-2 mt-4 first:mt-0 text-foreground dark:text-white">
+                                          {children}
+                                        </h3>
+                                      ),
+                                      ul: ({ children }) => (
+                                        <ul className="list-disc list-inside mb-3 space-y-1 ml-2">
+                                          {children}
+                                        </ul>
+                                      ),
+                                      ol: ({ children }) => (
+                                        <ol className="list-decimal list-inside mb-3 space-y-1 ml-2">
+                                          {children}
+                                        </ol>
+                                      ),
+                                      li: ({ children }) => (
+                                        <li className="text-[15px] leading-6 ml-2">
+                                          {children}
+                                        </li>
+                                      ),
+                                      blockquote: ({ children }) => (
+                                        <blockquote className="border-l-4 border-zinc-300 dark:border-zinc-600 pl-4 py-2 mb-3 italic text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800/50 rounded-r">
+                                          {children}
+                                        </blockquote>
+                                      ),
+                                      strong: ({ children }) => (
+                                        <strong className="font-semibold text-foreground dark:text-white">
+                                          {children}
+                                        </strong>
+                                      ),
+                                      em: ({ children }) => (
+                                        <em className="italic text-foreground dark:text-zinc-200">
+                                          {children}
+                                        </em>
+                                      ),
+                                      a: ({ href, children }) => (
+                                        <a
+                                          href={href}
+                                          className="text-blue-500 hover:text-blue-600 underline underline-offset-2"
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                        >
+                                          {children}
+                                        </a>
+                                      ),
+                                      code: ({
+                                        className,
+                                        children,
+                                        ...props
+                                      }: any) => {
+                                        const inline = props.inline;
+                                        return (
+                                          <CodeBlock
+                                            className={className}
+                                            inline={inline}
+                                            {...props}
+                                          >
+                                            {String(children).replace(/\n$/, "")}
+                                          </CodeBlock>
+                                        );
+                                      },
+                                    }}
+                                  >
+                                    {msg.text || ""}
+                                  </ReactMarkdown>
+                                );
+                              } catch (error) {
+                                console.error("Markdown render error:", error);
+                                return (
+                                  <div className="whitespace-pre-wrap text-[15px] leading-7">
+                                    {msg.text}
+                                  </div>
+                                );
+                              }
+                            })()}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-[15px] leading-6 font-medium">{msg.text}</div>
+                      )}
 
                   {/* Show image if exists */}
                   {msg.image && (
@@ -1152,32 +1219,47 @@ export const ChatView = ({
                       )}
                     </div>
                   )}
+                    </div>
+                  </div>
                 </div>
               ))}
 
               {/* Streaming AI message (if any) */}
               {streamingMsg && (
-                <div className="p-2 rounded-lg text-sm bg-zinc-200 dark:bg-zinc-950 dark:text-white self-start text-left w-fit max-w-[85%]">
-                  <div className="prose prose-sm max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-pre:hidden prose-code:hidden">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm, remarkBreaks]}
-                      components={{
-                        code: ({ className, children, ...props }: any) => {
-                          const inline = props.inline;
-                          return (
-                            <CodeBlock
-                              className={className}
-                              inline={inline}
-                              {...props}
-                            >
-                              {String(children).replace(/\n$/, "")}
-                            </CodeBlock>
-                          );
-                        },
-                      }}
-                    >
-                      {streamingMsg}
-                    </ReactMarkdown>
+                <div className="w-full flex mb-4">
+                  <div className="flex w-full justify-start">
+                    <div className="max-w-[85%] bg-transparent text-foreground">
+                      <div className="prose prose-base max-w-none text-foreground dark:text-zinc-100 leading-relaxed">
+                        <div className="space-y-3">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm, remarkBreaks]}
+                            components={{
+                              p: ({ children }) => (
+                                <p className="mb-3 last:mb-0 leading-7 text-[15px]">
+                                  {children}
+                                </p>
+                              ),
+                              code: ({ className, children, ...props }: any) => {
+                                const inline = props.inline;
+                                return (
+                                  <CodeBlock
+                                    className={className}
+                                    inline={inline}
+                                    {...props}
+                                  >
+                                    {String(children).replace(/\n$/, "")}
+                                  </CodeBlock>
+                                );
+                              },
+                            }}
+                          >
+                            {streamingMsg}
+                          </ReactMarkdown>
+                          {/* Streaming cursor */}
+                          <span className="inline-block w-2 h-5 bg-zinc-600 dark:bg-zinc-400 animate-pulse ml-1" />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
