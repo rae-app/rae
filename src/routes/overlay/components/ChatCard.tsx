@@ -947,8 +947,9 @@ export const ChatView = ({
                 isMaximized ? "w-[600px] mx-auto" : "w-full"
               }`}
             >
-              <div className="h-full w-full flex justify-between items-center p-2 tracking-tight font-medium">
-                <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="h-full w-full flex items-center p-2 tracking-tight font-medium">
+                {/* Title section with fixed max width */}
+                <div className="flex items-center gap-2 min-w-0 max-w-[60%]">
                   <div className="flex items-center gap-2 text-foreground min-w-0 flex-1">
                     {titleLoading ? (
                       <div className="flex items-center gap-2 min-w-0">
@@ -956,12 +957,15 @@ export const ChatView = ({
                         <span className="truncate">Generating title...</span>
                       </div>
                     ) : (
-                      <span className="truncate flex-1 px-2 text-sm">
+                      <span className="truncate px-2 text-sm">
                         {overlayChatTitle}
                       </span>
                     )}
                   </div>
-                  {/* Insert button next to chat title */}
+                </div>
+                
+                {/* Insert button */}
+                <div className="flex items-center gap-2 ml-2">
                   <AnimatePresence>
                     {currResponse && currResponse.trim() && (
                       <motion.button
@@ -996,23 +1000,25 @@ export const ChatView = ({
                     )}
                   </AnimatePresence>
                 </div>
-                <div className="text-zinc-600 text-sm  font-medium shrink-0 ml-2">
-                  {getCurrentTime().toUpperCase()}
+                
+                {/* Time and controls section */}
+                <div className="flex items-center gap-2 ml-auto">
+                  <div className="text-zinc-600 text-sm font-medium shrink-0">
+                    {getCurrentTime().toUpperCase()}
+                  </div>
+                    <OverlayButton onClick={handleNewChat} title="New Chat">
+                      <TrashIcon weight="bold" />
+                    </OverlayButton>
+
+                    {/* <OverlayButton
+
+                  onClick={onClose}
+                  title="Open in main window"
+                >
+                  <CaretDoubleUpIcon weight="bold" />
+                </OverlayButton> */}
+                  </div>
                 </div>
-              </div>
-              <div className="flex ml-auto shrink-0 h-[44px] gap-1 p-1">
-                <OverlayButton onClick={handleNewChat} title="New Chat">
-                  <TrashIcon weight="bold" />
-                </OverlayButton>
-
-                {/* <OverlayButton
-
-              onClick={onClose}
-              title="Open in main window"
-            >
-              <CaretDoubleUpIcon weight="bold" />
-            </OverlayButton> */}
-              </div>
             </div>
 
             {/* Image referenced notification */}
