@@ -5,9 +5,9 @@ pub fn show_app(app: AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
         println!("show app");
 
+        let _ = window.show();
+        let _ = window.set_focus();
         let _ = window.set_ignore_cursor_events(false);
-        // let _ = window.set_position(Position::)
-        // let _ = window.set_position(Position::Logical(tauri::LogicalPosition { x: 200.0, y: 100.0 }));
     }
 }
 

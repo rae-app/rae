@@ -306,12 +306,10 @@ pub fn toggle_magic_dot(app: AppHandle) {
         })
         .build()
         .and_then(|w| {
-            let _ = w.show();
-            let _ = w.set_focus();
+            // Start hidden and skip taskbar - will be managed through tray
+            let _ = w.hide();
+            let _ = w.set_skip_taskbar(true);
             let _ = w.set_ignore_cursor_events(false);
-
-            // Apply stealth mode to the newly created window
-            apply_stealth_mode_to_window(app.clone(), "overlay");
 
             NotchWatcher::start(w.clone(), app.clone());
             Ok(())
@@ -440,12 +438,10 @@ pub fn show_magic_dot(app: AppHandle) {
         })
         .build()
         .and_then(|w| {
-            let _ = w.show();
-            let _ = w.set_focus();
+            // Start hidden and skip taskbar - will be managed through tray
+            let _ = w.hide();
+            let _ = w.set_skip_taskbar(true);
             let _ = w.set_ignore_cursor_events(false);
-
-            // Apply stealth mode to the newly created window
-            apply_stealth_mode_to_window(app.clone(), "overlay");
 
             // Emit events to prevent notch and pinning
             let _ = w.emit("disable_notch_on_show", ());

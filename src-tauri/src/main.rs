@@ -141,116 +141,91 @@ app.manage(AudioState(Mutex::new(false)));
                 std::time::Instant::now()
             );
 
+            // Create tray immediately on startup
+            {
+                let app_handle = app.handle().clone();
+                if let (Ok(show_item), Ok(quit_item)) = (
+                    MenuItemBuilder::with_id("show_rae", "Show Rae").build(&app_handle),
+                    MenuItemBuilder::with_id("quit_rae", "Quit").build(&app_handle),
+                ) {
+                    if let Ok(menu) = Menu::with_items(&app_handle, &[&show_item, &quit_item]) {
+                        let _ = TrayIconBuilder::new()
+                            .icon(load_tray_icon())
+                            .menu(&menu)
+                            .on_tray_icon_event(|tray, event: TrayIconEvent| {
+                                if let TrayIconEvent::Click {
+                                    button: MouseButton::Left,
+                                    ..
+                                } = event
+                                {
+                                    let app = tray.app_handle();
+                                    // Show both main and overlay windows when clicking tray
+                                    if let Some(win) = app.get_webview_window("main") {
+                                        let _ = win.show();
+                                        let _ = win.set_focus();
+                                    }
+                                    if let Some(win) = app.get_webview_window("overlay") {
+                                        let _ = win.show();
+                                        let _ = win.set_focus();
+                                    }
+                                }
+                            })
+                            .on_menu_event(|app, event| match event.id().as_ref() {
+                                "show_rae" => {
+                                    // Show both main and overlay windows
+                                    if let Some(win) = app.get_webview_window("main") {
+                                        let _ = win.show();
+                                        let _ = win.set_focus();
+                                    }
+                                    if let Some(win) = app.get_webview_window("overlay") {
+                                        let _ = win.show();
+                                        let _ = win.set_focus();
+                                    }
+                                }
+                                "quit_rae" => {
+                                    std::process::exit(0);
+                                }
+                                _ => {}
+                            })
+                            .build(&app_handle);
+
+                        // Mark tray as created
+                        if let Some(state) = app_handle.try_state::<TrayState>() {
+                            if let Ok(mut created) = state.0.lock() {
+                                *created = true;
+                            }
+                        }
+                    }
+                }
+            }
+
             // Intercept main window close and hide to tray instead
             if let Some(main_window) = app.get_webview_window("main") {
                 let _app_handle_clone = app_handle.clone();
                 let app_handle_for_tray = app.handle().clone();
                 main_window.on_window_event(move |event| {
                     if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                        // Prevent app exit; show tray and hide main window
+                        // Prevent app exit; hide main window and remove from taskbar
                         api.prevent_close();
-                        // Create tray if not created
                         if let Some(win) = app_handle_for_tray.get_webview_window("main") {
-                            // Try to create tray
-                            let _ = app_handle_for_tray.try_state::<TrayState>().map(|state| {
-                                if let Ok(mut created) = state.0.lock() {
-                                    if !*created {
-                                        // Build menu
-                                        if let (Ok(show_item), Ok(quit_item)) = (
-                                            MenuItemBuilder::with_id("show_rae", "Show Rae")
-                                                .build(&app_handle_for_tray),
-                                            MenuItemBuilder::with_id("quit_rae", "Quit")
-                                                .build(&app_handle_for_tray),
-                                        ) {
-                                            if let Ok(menu) = Menu::with_items(
-                                                &app_handle_for_tray,
-                                                &[&show_item, &quit_item],
-                                            ) {
-                                                let _ = TrayIconBuilder::new()
-                                                    .icon(load_tray_icon())
-                                                    .menu(&menu)
-                                                    .on_tray_icon_event(
-                                                        |tray, event: TrayIconEvent| {
-                                                            if let TrayIconEvent::Click {
-                                                                button: MouseButton::Left,
-                                                                ..
-                                                            } = event
-                                                            {
-                                                                let app = tray.app_handle();
-                                                                if let Some(win) =
-                                                                    app.get_webview_window("main")
-                                                                {
-                                                                    let _ = win.show();
-                                                                    let _ = win.set_focus();
-                                                                }
-                                                            }
-                                                        },
-                                                    )
-                                                    .on_menu_event(|app, event| {
-                                                        match event.id().as_ref() {
-                                                            "show_rae" => {
-                                                                if let Some(win) =
-                                                                    app.get_webview_window("main")
-                                                                {
-                                                                    let _ = win.show();
-                                                                    let _ = win.set_focus();
-                                                                }
-                                                            }
-                                                            "quit_rae" => {
-                                                                std::process::exit(0);
-                                                            }
-                                                            _ => {}
-                                                        }
-                                                    })
-                                                    .build(&app_handle_for_tray);
-                                                *created = true;
-                                            }
-                                        }
-                                    }
-                                }
-                            });
+                            let _ = win.set_skip_taskbar(true);
                             let _ = win.hide();
                         }
                     }
                 });
             }
 
-            // Handle overlay window close event for cleanup
+            // Handle overlay window close event - hide instead of close
             if let Some(overlay_window) = app.get_webview_window("overlay") {
+                let app_handle_for_overlay = app.handle().clone();
                 overlay_window.on_window_event(move |event| {
-                    if let tauri::WindowEvent::CloseRequested { .. } = event {
-                        println!("Overlay window close requested, cleaning up shortcuts...");
-                        // Clean up global shortcuts when overlay is closed
-                        let shortcuts = vec![
-                            tauri_plugin_global_shortcut::Shortcut::new(
-                                Some(tauri_plugin_global_shortcut::Modifiers::CONTROL),
-                                tauri_plugin_global_shortcut::Code::KeyH,
-                            ),
-                            tauri_plugin_global_shortcut::Shortcut::new(
-                                Some(tauri_plugin_global_shortcut::Modifiers::CONTROL),
-                                tauri_plugin_global_shortcut::Code::KeyM,
-                            ),
-                            tauri_plugin_global_shortcut::Shortcut::new(
-                                Some(tauri_plugin_global_shortcut::Modifiers::CONTROL),
-                                tauri_plugin_global_shortcut::Code::KeyP,
-                            ),
-                            tauri_plugin_global_shortcut::Shortcut::new(
-                                Some(
-                                    tauri_plugin_global_shortcut::Modifiers::CONTROL
-                                        | tauri_plugin_global_shortcut::Modifiers::SHIFT,
-                                ),
-                                tauri_plugin_global_shortcut::Code::Enter,
-                            ),
-                            tauri_plugin_global_shortcut::Shortcut::new(
-                                Some(tauri_plugin_global_shortcut::Modifiers::CONTROL),
-                                tauri_plugin_global_shortcut::Code::KeyD,
-                            ),
-                        ];
-
-                        for shortcut in shortcuts {
-                            let _ = app_handle.global_shortcut().unregister(shortcut);
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        // Prevent overlay exit; hide overlay window and remove from taskbar
+                        api.prevent_close();
+                        if let Some(win) = app_handle_for_overlay.get_webview_window("overlay") {
+                            let _ = win.set_skip_taskbar(true);
+                            let _ = win.hide();
                         }
-                        println!("Global shortcuts unregistered on overlay close");
                     }
                 });
             }

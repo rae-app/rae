@@ -210,6 +210,7 @@ export const ChatView = ({
   const [isAIThinking, setIsAIThinking] = useState(false);
   const [isWebSearching, setIsWebSearching] = useState(false);
   const [isImageGenerating, setIsImageGenerating] = useState(false);
+  const [currentSearchQuery, setCurrentSearchQuery] = useState<string>("");
   // Removed typing animation logic
   const [isInputTyping, setIsInputTyping] = useState(false);
   const [selectedTool, setSelectedTool] = useState<0 | 1 | 2 | 4>(0); // 0=none, 1=web search, 2=supermemory, 4= image generation
@@ -315,6 +316,17 @@ export const ChatView = ({
               setOverlayConvoId(data.conversationId);
             }
             // Optionally handle title
+          } else if (data.type === "search_site_found") {
+            // Handle real-time search progress
+            if ((window as any).addRealSearchSite) {
+              (window as any).addRealSearchSite({
+                site: data.site,
+                domain: data.domain,
+                favicon: data.favicon,
+                title: data.title,
+                link: data.link
+              });
+            }
           } else if (data.type === "done") {
             // Stream complete
             setStreamingMsg("");
@@ -567,6 +579,7 @@ export const ChatView = ({
     setMessages(newMessages);
     if (overlayConvoId === -1) setTitleLoading(true);
 
+    setCurrentSearchQuery(userMsg);
     setIsWebSearching(true);
 
     const imageToSend = manualImage || (isActive ? windowScreenshot : "") || "";
@@ -1244,7 +1257,7 @@ export const ChatView = ({
               )}
 
               {/* Web Search Animation */}
-              <WebSearchAnimation isSearching={isWebSearching} />
+              <WebSearchAnimation isSearching={isWebSearching} searchQuery={currentSearchQuery} />
 
               {/* Image Generation Animation */}
               <AnimatePresence mode="popLayout">
