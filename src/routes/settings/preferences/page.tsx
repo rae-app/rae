@@ -69,6 +69,9 @@ const Preferences = () => {
   const [autoStartEnabled, setAutoStartEnabled] = useState<boolean>(
     localStorage.getItem("auto_start_enabled") === "true",
   );
+  const [bubbleSoundEnabled, setBubbleSoundEnabled] = useState<boolean>(
+    localStorage.getItem("bubble_sound_enabled") !== "false", // Default to true
+  );
 
   useEffect(() => {
     invoke<boolean>("get_auto_show_on_copy_enabled")
@@ -272,6 +275,15 @@ const Preferences = () => {
                   });
                   emit("notch_window_display_changed", next);
                 } catch (_) {}
+              }}
+            />
+            <ToggleRow
+              label="Enable/Disable notch sound"
+              enabled={bubbleSoundEnabled}
+              onToggle={async (next) => {
+                setBubbleSoundEnabled(next);
+                localStorage.setItem("bubble_sound_enabled", String(next));
+                emit("bubble_sound_enabled_changed", { enabled: next });
               }}
             />
             {/* <ToggleRow
