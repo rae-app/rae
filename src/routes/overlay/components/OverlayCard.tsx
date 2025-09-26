@@ -61,7 +61,12 @@ const NOTCH_SHADOW = `
 const GRADIENT_OPACITY = "";
 
 // Function to play notch collapse sound with sync with notch animation
-const playNotchSound = () => {
+const playNotchSound = (soundEnabled: boolean) => {
+  // Check if bubble sound is enabled in settings
+  if (!soundEnabled) {
+    return; // Don't play sound if disabled
+  }
+
   try {
     const audio = new Audio(notchSound);
     audio.volume = 0.3; // Set volume to 30%
@@ -117,6 +122,9 @@ const Overlay = () => {
   );
   const [audioClientActive, setAudioClientActive] = useState(false);
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
+  const [bubbleSoundEnabled, setBubbleSoundEnabled] = useState<boolean>(
+    () => localStorage.getItem("bubble_sound_enabled") !== "false" // Default to true
+  );
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isActive, setIsActive] = useState<boolean>(
     () => localStorage.getItem("overlay_active") !== "false" // Default to true if not set
@@ -312,6 +320,16 @@ const Overlay = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const unlisten = listen("bubble_sound_enabled_changed", (event) => {
+      const enabled = (event.payload as { enabled: boolean }).enabled;
+      setBubbleSoundEnabled(enabled);
+    });
+    return () => {
+      unlisten.then((unlisten) => unlisten());
+    };
+  }, []);
+
   // Effect for notch timeout
   useEffect(() => {
     // Clear any existing timeout
@@ -354,7 +372,7 @@ const Overlay = () => {
               console.log("Notch enabled successfully");
               setIsNotch(true);
               // Play sound with perfect timing - synced with smooth resize animation (200ms total, play at 100ms)
-              setTimeout(() => playNotchSound(), 60);
+              setTimeout(() => playNotchSound(bubbleSoundEnabled), 60);
             })
             .catch((error) => {
               console.error("Failed to enable notch:", error);
@@ -401,7 +419,7 @@ const Overlay = () => {
             .then(() => {
               console.log("Safety: Notch enabled via fallback");
               setIsNotch(true);
-              setTimeout(() => playNotchSound(), 60);
+              setTimeout(() => playNotchSound(bubbleSoundEnabled), 60);
             })
             .catch((error) => {
               console.error("Safety: Failed to enable notch:", error);
@@ -526,7 +544,7 @@ const Overlay = () => {
       if (assist && !audioClientActive) {
         try {
           console.log("🎤 Starting audio client for assist mode...");
-          setAssistMessage("🔄 Connecting to audio service...");
+          setAssistMessage("Connecting to audio service...");
 
           // Check if audio client is already running
           const isRunning = await invoke("is_audio_client_running");
@@ -541,18 +559,18 @@ const Overlay = () => {
 
           // Give it time to initialize
           setTimeout(() => {
-            setAssistMessage("🎤 Listening... Speak to interact with Rae.");
-            console.log("✅ Audio client should be active now");
+            setAssistMessage("Listening... Speak to interact with Rae.");
+            console.log(" Audio client should be active now");
           }, 2000);
         } catch (error) {
           console.error("❌ Failed to start audio client:", error);
-          setAssistMessage("❌ Failed to start audio service");
+          setAssistMessage("Failed to start audio service");
           setAudioClientActive(false);
 
           // Retry after 3 seconds
           setTimeout(() => {
             if (assist) {
-              setAssistMessage("🔄 Retrying audio connection...");
+              setAssistMessage("Retrying audio connection...");
               handleAssistModeChange();
             }
           }, 3000);
@@ -600,11 +618,11 @@ const Overlay = () => {
             setAssistMessage((prev) => {
               // If this is the first delta, replace the default/listening message
               if (
-                prev === "🎤 Listening... Speak to interact with Rae." ||
+                prev === "Listening... Speak to interact with Rae." ||
                 prev ===
                   "Hello! Assist mode is now active. How can I help you?" ||
-                prev === "🔄 Connecting to audio service..." ||
-                prev === "🔄 Retrying audio connection..."
+                prev === "Connecting to audio service..." ||
+                prev === "Retrying audio connection..."
               ) {
                 return typeof data.delta === "string" ? "💬 " + data.delta : "";
               }
@@ -618,7 +636,7 @@ const Overlay = () => {
             // After response is done, reset to listening state
             responseTimeoutRef = setTimeout(() => {
               if (assist && audioClientActive) {
-                setAssistMessage("🎤 Listening... Speak to interact with Rae.");
+                setAssistMessage("Listening... Speak to interact with Rae.");
               }
             }, 3000);
           }
@@ -637,11 +655,11 @@ const Overlay = () => {
                 console.warn(
                   "⚠️ Audio client stopped unexpectedly, restarting..."
                 );
-                setAssistMessage("🔄 Reconnecting audio service...");
+                setAssistMessage("Reconnecting audio service...");
                 await invoke("start_audio_client");
                 setTimeout(() => {
                   setAssistMessage(
-                    "🎤 Listening... Speak to interact with Rae."
+                    "Listening... Speak to interact with Rae."
                   );
                 }, 2000);
               }
@@ -661,7 +679,7 @@ const Overlay = () => {
 
     return () => {
       if (unlistenAudioResponse) {
-        console.log("🔗 Cleaning up audio response listener");
+        console.log("Cleaning up audio response listener");
         unlistenAudioResponse();
       }
       if (responseTimeoutRef) {
@@ -728,7 +746,7 @@ const Overlay = () => {
               console.log("Mouse leave: Notch enabled successfully");
               setIsNotch(true);
               // Play sound with perfect timing - synced with smooth resize animation (200ms total, play at 100ms)
-              setTimeout(() => playNotchSound(), 60);
+              setTimeout(() => playNotchSound(bubbleSoundEnabled), 60);
             })
             .catch((error) => {
               console.error("Mouse leave: Failed to enable notch:", error);
@@ -1224,9 +1242,9 @@ const Overlay = () => {
                       src={windowScreenshot}
                       alt="Window screenshot"
                       className="min-w-[250px] max-h-[350px] rounded shadow-md"
-                      onLoad={() => console.log("✅ Image loaded successfully")}
+                      onLoad={() => console.log(" Image loaded successfully")}
                       onError={(e) =>
-                        console.error("❌ Image failed to load:", e)
+                        console.error("Image failed to load:", e)
                       }
                       style={{ imageRendering: "crisp-edges" }}
                     />

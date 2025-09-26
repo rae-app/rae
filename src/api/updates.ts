@@ -6,8 +6,13 @@
 }
 
 import axios from "axios";
+<<<<<<< HEAD
 export const BASE_URL = "https://quackback-xwhd.onrender.com";
 // const BASE_URL = "http://localhost:8000";
+=======
+
+const BASE_URL = "https://quackback-xwhd.onrender.com";
+>>>>>>> 34d3b0e6c2533f0afa461f2c071b0be7363137cf
 
 export const NameUpdate = async (
   name: string,

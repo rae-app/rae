@@ -141,7 +141,6 @@ export const WebSearchAnimation = ({ isSearching, searchQuery, isResponseStreami
                         animate={index === currentSiteIndex % realSearchSites.length ? { scale: [1, 1.2, 1] } : { scale: 1 }}
                         transition={{ duration: 0.6, repeat: index === currentSiteIndex % realSearchSites.length ? Infinity : 0, repeatType: "loop" }}
                         className="size-5 flex items-center justify-center rounded-sm overflow-hidden border border-zinc-600/20"
-                        title={site.site}
                       >
                         <img
                           src={site.favicon}
