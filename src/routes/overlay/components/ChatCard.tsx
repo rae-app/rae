@@ -219,8 +219,8 @@ export const ChatView = ({
       ? false
       : true,
   );
-  const [attachedImage, setAttachedImage] = useState<string | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // Multi-image support
+  const [attachedImages, setAttachedImages] = useState<string[]>([]);
   const [stealthMode, setStealthMode] = useState<boolean>(false);
   const [lastImage, setLastImage] = useState<string>("");
   const [hoveredImageIndex, setHoveredImageIndex] = useState<number | null>(
@@ -393,40 +393,34 @@ export const ChatView = ({
 
   const handleAIResponse = async (userMsg: string, manualImage?: string) => {
     if (userMsg.trim() === "") return;
-
-    const finalImage = manualImage || attachedImage || windowScreenshot || "";
-
+    const imagesToSend = manualImage ? [manualImage] : attachedImages.length > 0 ? attachedImages : (windowScreenshot ? [windowScreenshot] : []);
     // Create context for smart AI prompting
     const insertionContext: InsertionContext = {
       windowName,
       windowScreenshot: windowScreenshot || undefined,
     };
-
     // Enhance the user message with context for better AI responses
     const contextAwareMessage = generateContextAwarePrompt(userMsg, insertionContext);
-
     console.log("handleAIResponse: Processing message with context:", {
       originalMessage: userMsg,
       contextAwareMessage: contextAwareMessage,
       windowName,
       detectedContext: insertionContext.detectedContext,
-      manualImageLength: manualImage?.length || 0,
-      attachedImageLength: attachedImage?.length || 0,
+      manualImageLength: manualImage ? 1 : 0,
+      attachedImagesLength: attachedImages.length,
       windowScreenshotLength: windowScreenshot?.length || 0,
-      finalImageLength: finalImage.length,
+      imagesToSendLength: imagesToSend.length,
     });
-
     const newMessages = [
       ...messages,
       {
         sender: "user" as const,
         text: userMsg, // Show original message to user
-        image: [finalImage],
+        image: imagesToSend,
       },
     ];
     setMessages(newMessages);
     if (overlayConvoId === -1) setTitleLoading(true);
-
     // Set appropriate animation state based on selected tool
     if (selectedTool === 1) {
       // Web search animation
@@ -439,12 +433,9 @@ export const ChatView = ({
       setIsAIThinking(true);
       setIsWebSearching(false);
     }
-
-    const imageToSend = manualImage || (isActive ? windowScreenshot : "") || "";
-
     try {
       let ai_res;
-      if (imageToSend == "") {
+      if (imagesToSend.length === 0) {
         console.log("🔧 About to call handleStreamAIResponse with selectedTool:", selectedTool);
         await handleStreamAIResponse(
           email,
@@ -453,7 +444,7 @@ export const ChatView = ({
           overlayConvoId,
           currentModel.label,
           currentModel.value,
-          "",
+          [],
           selectedTool,
           newMessages,
         );
@@ -465,17 +456,14 @@ export const ChatView = ({
           conversationId: overlayConvoId,
           provider: currentModel.label,
           modelName: currentModel.value,
-          image: [imageToSend],
+          image: imagesToSend,
         });
-
         const updatedMessages = [
           ...newMessages,
           { sender: "ai" as const, text: ai_res.aiResponse, image: [""] },
         ];
-
         setMessages(updatedMessages);
         setCurrResponse(ai_res.aiResponse);
-
         if (overlayConvoId === -1) {
           setOverlayChatTitle(ai_res.title);
           setOverlayConvoId(ai_res.conversationId);
@@ -510,10 +498,9 @@ export const ChatView = ({
       });
 
       if (initialAttachedImage) {
-        setAttachedImage(initialAttachedImage);
-        setImagePreview(initialAttachedImage);
+        setAttachedImages([initialAttachedImage]);
       }
-      handleAIResponse(initialMessage, initialAttachedImage);
+      handleAIResponse(initialMessage, initialAttachedImage || undefined);
     }
   }, [initialMessage, initialAttachedImage]);
 
@@ -527,22 +514,20 @@ export const ChatView = ({
   // Removed typing animation effect
 
   const handleNewChat = () => {
-    setMessages([]);
-    setOverlayChatTitle("New Chat");
-    setOverlayConvoId(-1);
-    setChatInputText("");
-    setCurrResponse("");
-    setIsInputTyping(false);
-    setSelectedTool(0);
-    setAttachedImage(null);
-    setImagePreview(null);
+  setMessages([]);
+  setOverlayChatTitle("New Chat");
+  setOverlayConvoId(-1);
+  setChatInputText("");
+  setCurrResponse("");
+  setIsInputTyping(false);
+  setSelectedTool(0);
+  setAttachedImages([]);
   };
 
   // Handle image paste
   const handlePaste = (e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items;
     if (!items) return;
-
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       if (item.type.indexOf("image") !== -1) {
@@ -552,8 +537,10 @@ export const ChatView = ({
           const reader = new FileReader();
           reader.onload = (event) => {
             const base64 = event.target?.result as string;
-            setAttachedImage(base64);
-            setImagePreview(base64);
+            setAttachedImages((prev) => {
+              if (prev.length >= 3) return prev;
+              return [...prev, base64];
+            });
           };
           reader.readAsDataURL(file);
         }
@@ -563,14 +550,13 @@ export const ChatView = ({
   };
 
   // Clear attached image
-  const clearImage = () => {
-    setAttachedImage(null);
-    setImagePreview(null);
+  const clearImage = (idx: number) => {
+    setAttachedImages((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const getPlaceholderText = () => {
-    if (attachedImage) {
-      return "Describe what you want to know about this image...";
+    if (attachedImages.length > 0) {
+      return "Describe what you want to know about these images...";
     }
 
     switch (selectedTool) {
@@ -586,8 +572,10 @@ export const ChatView = ({
   };
 
   const handleReferenceImage = (imageBase64: string) => {
-    setAttachedImage(imageBase64);
-    setImagePreview(imageBase64);
+    setAttachedImages((prev) => {
+      if (prev.length >= 3) return prev;
+      return [...prev, imageBase64];
+    });
 
     // If not already on image generation tool, switch to it for better workflow
     // if (selectedTool !== 4) {
@@ -609,25 +597,20 @@ export const ChatView = ({
       windowName,
       windowScreenshot: windowScreenshot || undefined,
     };
-    
     const contextAwareMessage = generateContextAwarePrompt(userMsg, insertionContext);
-
+    const imagesToSend = manualImage ? [manualImage] : attachedImages.length > 0 ? attachedImages : (windowScreenshot ? [windowScreenshot] : []);
     const newMessages = [
       ...messages,
       {
         sender: "user" as const,
         text: userMsg, // Show original message to user
-          image: attachedImage ? [attachedImage] : (windowScreenshot ? [windowScreenshot] : [""])
+        image: imagesToSend,
       },
     ];
     setMessages(newMessages);
     if (overlayConvoId === -1) setTitleLoading(true);
-
     setCurrentSearchQuery(userMsg);
     setIsWebSearching(true);
-
-    const imageToSend = manualImage || (isActive ? windowScreenshot : "") || "";
-
     try {
       const ai_res = await GenerateWithWebSearch({
         email: email,
@@ -636,17 +619,14 @@ export const ChatView = ({
         conversationId: overlayConvoId,
         provider: currentModel.label,
         modelName: currentModel.value,
-        image: [imageToSend],
+        image: imagesToSend,
       });
-
       const updatedMessages = [
         ...newMessages,
         { sender: "ai" as const, text: ai_res.aiResponse, image: [""] },
       ];
-
       setMessages(updatedMessages);
       setCurrResponse(ai_res.aiResponse);
-
       if (overlayConvoId === -1) {
         setOverlayChatTitle(ai_res.title);
         setOverlayConvoId(ai_res.conversationId);
@@ -677,24 +657,19 @@ export const ChatView = ({
       windowName,
       windowScreenshot: windowScreenshot || undefined,
     };
-    
     const contextAwareMessage = generateContextAwarePrompt(userMsg, insertionContext);
-
+    const imagesToSend = manualImage ? [manualImage] : attachedImages.length > 0 ? attachedImages : (windowScreenshot ? [windowScreenshot] : []);
     const newMessages = [
       ...messages,
       {
         sender: "user" as const,
         text: userMsg, // Show original message to user
-        image: attachedImage ? [attachedImage] : (windowScreenshot ? [windowScreenshot] : [""]),
+        image: imagesToSend,
       },
     ];
     setMessages(newMessages);
     if (overlayConvoId === -1) setTitleLoading(true);
-
     setIsAIThinking(true);
-
-    const imageToSend = manualImage || (isActive ? windowScreenshot : "") || "";
-
     try {
       const ai_res = await GenerateWithSupermemory({
         email: email,
@@ -703,17 +678,14 @@ export const ChatView = ({
         conversationId: overlayConvoId,
         provider: currentModel.label,
         modelName: currentModel.value,
-        image: [imageToSend],
+        image: imagesToSend,
       });
-
       const updatedMessages = [
         ...newMessages,
         { sender: "ai" as const, text: ai_res.aiResponse, image: [""] },
       ];
-
       setMessages(updatedMessages);
       setCurrResponse(ai_res.aiResponse);
-
       if (overlayConvoId === -1) {
         setOverlayChatTitle(ai_res.title);
         setOverlayConvoId(ai_res.conversationId);
@@ -740,21 +712,18 @@ export const ChatView = ({
     manualImage?: string,
   ) => {
     if (!userMsg.trim()) return;
+    const imagesToSend = manualImage ? [manualImage] : attachedImages.length > 0 ? attachedImages : (windowScreenshot ? [windowScreenshot] : []);
     const newMessages = [
       ...messages,
       {
         sender: "user" as const,
         text: userMsg,
-        image: attachedImage ? [attachedImage] : (windowScreenshot ? [windowScreenshot] : [""]),
+        image: imagesToSend,
       },
     ];
     setMessages(newMessages);
     if (overlayConvoId === -1) setTitleLoading(true);
-
     setIsImageGenerating(true);
-
-    const imageToSend = manualImage || (isActive ? windowScreenshot : "") || "";
-
     try {
       const ai_res = await GenerateImage({
         email: email,
@@ -763,7 +732,7 @@ export const ChatView = ({
         conversationId: overlayConvoId,
         provider: currentModel.label,
         modelName: currentModel.value,
-        image: [imageToSend],
+        image: imagesToSend,
       });
       const updatedMessages = [
         ...newMessages,
@@ -775,7 +744,6 @@ export const ChatView = ({
       ];
       setMessages(updatedMessages);
       setCurrResponse(ai_res.aiResponse);
-
       if (overlayConvoId === -1) {
         setOverlayChatTitle(ai_res.title);
         setOverlayConvoId(ai_res.conversationId);
@@ -799,22 +767,19 @@ export const ChatView = ({
   const handleSendMessage = () => {
     const userMsg = chatInputText.trim();
     if (!userMsg) return;
-
     setChatInputText("");
     setIsInputTyping(false);
-
     if (selectedTool === 1) {
       // Use the streaming web search implementation
       console.log("Web search tool selected, using streaming implementation");
-      handleAIResponse(userMsg, attachedImage || undefined);
+      handleAIResponse(userMsg);
     } else if (selectedTool === 2) {
-      handleSupermemory(userMsg, attachedImage || undefined);
+      handleSupermemory(userMsg);
     } else if (selectedTool == 4) {
-      handleImageGeneration(userMsg, attachedImage || undefined);
+      handleImageGeneration(userMsg);
     } else {
-      handleAIResponse(userMsg, attachedImage || undefined);
+      handleAIResponse(userMsg);
     }
-
     if (resetToolAfterSend) {
       setSelectedTool(0);
       // Request overlay shell to stop analyzing (disable screen watch)
@@ -822,8 +787,7 @@ export const ChatView = ({
         emit("overlay_request_stop_analyze", {});
       } catch (_) {}
     }
-    setAttachedImage(null);
-    setImagePreview(null);
+    setAttachedImages([]);
   };
 
   const getCurrentTime = () =>
@@ -1380,32 +1344,36 @@ export const ChatView = ({
               <div className="h-[50px]  text-foreground bg-background relative flex items-center shrink-0">
                 <div className="h-full w-fit relative  flex items-center p-1 pr-0 ">
                   <AnimatePresence>
-                      {imagePreview && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 1, x: "-20px" }}
-                          animate={{ opacity: 1, scale: 1, x: "0%" }}
-                          exit={{ opacity: 0, scale: 1, x: "-20px" }}
-                          transition={{duration: 0.3, ease: "circInOut"}}
-                          className="absolute bottom-full p-1 left-0"
-                        >
-                          <div onClick={() => clearImage()} className="relative group h-[90px] w-[120px] border-2 border-border hover:border-surface/40 group transition-colors cursor-pointer overflow-hidden rounded-sm flex items-center justify-center">
+                    {attachedImages.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 1, x: "-20px" }}
+                        animate={{ opacity: 1, scale: 1, x: "0%" }}
+                        exit={{ opacity: 0, scale: 1, x: "-20px" }}
+                        transition={{ duration: 0.3, ease: "circInOut" }}
+                        className="absolute bottom-full p-1 left-0 flex gap-2"
+                      >
+                        {attachedImages.map((img, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => clearImage(idx)}
+                            className="relative group h-[90px] w-[120px] border-2 border-border hover:border-surface/40 group transition-colors cursor-pointer overflow-hidden rounded-sm flex items-center justify-center"
+                          >
                             <img
-                              src={imagePreview}
-                              alt="Attached screenshot"
+                              src={img}
+                              alt={`Attached screenshot ${idx + 1}`}
                               className="size-full object-cover absolute left-0 top-0  z-10 cursor-pointer"
-                              title="Screenshot attached - Click to remove"
-                              onClick={clearImage}
+                              title={`Screenshot ${idx + 1} attached - Click to remove`}
+                              onClick={() => clearImage(idx)}
                             />
-                              <TrashSimpleIcon weight="bold" className="z-40 text-white group-hover:opacity-100 opacity-0 transition-all" />
+                            <TrashSimpleIcon weight="bold" className="z-40 text-white group-hover:opacity-100 opacity-0 transition-all" />
                             <div
-                              
                               className="absolute group-hover:opacity-100 opacity-0 transition-all z-30 blur-xl -bottom-1/2 left-1/2 -translate-x-1/2  rounded-full pointer-events-auto bg-surface/70 size-[90px] flex items-center justify-center"
-                            >
-                            </div>
+                            ></div>
                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                   <OverlayButton
                     onClick={(e) => {
                       e.stopPropagation();
