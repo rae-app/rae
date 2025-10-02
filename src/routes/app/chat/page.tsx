@@ -289,6 +289,7 @@ export default function ChatWindow() {
           provider: currentModel.label,
           modelName: currentModel.value,
           image: imagesToSend,
+          files: [],
         });
         let updatedMessages = [
           ...newMessages,
