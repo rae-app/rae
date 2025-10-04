@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { emit, listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import {
-  smoothResize,
-  pinMagicDot,
-  resize,
-  refreshStyles,
-} from "@/utils/windowUtils";
+import { smoothResize, resize, refreshStyles } from "@/utils/windowUtils";
 import { AnimatePresence, motion } from "framer-motion";
 import { OverlayButton } from "./OverlayComponents";
 import { ChatView } from "./ChatCard";
@@ -428,21 +423,28 @@ const Overlay = () => {
   }, [isPinned, showChat, isNotch, inputActive]);
 
   const handleMouseEnter = () => {
-    // // Always clear any pending timeouts
-    // if (notchTimeoutRef.current) {
-    //   clearTimeout(notchTimeoutRef.current);
-    //   notchTimeoutRef.current = null;
-    // }
-    // // Clear notch if it's showing and we're pinned
-    // if (isNotch && isPinned) {
-    //   setIsNotch(false);
-    // }
+    console.log(
+      "🖱️ Mouse entered overlay - isNotch:",
+      isNotch,
+      "isPinned:",
+      isPinned,
+    );
+    // Always clear any pending timeouts
+    if (notchTimeoutRef.current) {
+      clearTimeout(notchTimeoutRef.current);
+      notchTimeoutRef.current = null;
+      console.log("⏱️ Cleared notch timeout");
+    }
+    // Clear notch if it's showing and we're pinned
+    if (isNotch && isPinned) {
+      console.log("📊 Expanding notch to overlay bar");
+      setIsNotch(false);
+    }
   };
   useEffect(() => {
     const unlisten = listen("notch-hover", () => {
       // Expand the notch when the event is received
-
-      // console.log("notch-hover", isNotch, isPinned);
+      console.log("👆 notch-hover event received - expanding notch");
 
       if (notchTimeoutRef.current) {
         clearTimeout(notchTimeoutRef.current);
@@ -458,6 +460,11 @@ const Overlay = () => {
 
   // Setup event listeners for overlay controls
   useEffect(() => {
+    // Start notch watcher for hover detection
+    invoke("start_notch_watcher").catch((error) => {
+      console.error("Failed to start notch watcher:", error);
+    });
+
     const eventListeners = [
       listen("disable_notch_on_show", () => {
         console.log("Disabling notch on show");
@@ -779,27 +786,39 @@ const Overlay = () => {
     return () => document.removeEventListener("mouseup", handleGlobalMouseUp);
   }, []);
 
-  const handlePinClick = () => {
-    setIsPinned((prev) => {
-      if (prev == false) {
-        pinMagicDot();
-        // Reset both disable flags when user manually pins
-        DISABLE_PIN_ON_SHOW.current = false;
-        DISABLE_NOTCH_ON_SHOW.current = false;
-        console.log("Pin: Reset notch disable flag for proper timing");
-      }
-      const newPinned = !prev;
-      if (!newPinned) {
-        setIsNotch(false);
-        console.log("Unpinned magic dot");
-      } else {
-        console.log("Pinning magic dot...");
-      }
+  const handlePinClick = async () => {
+    const newPinned = !isPinned;
+
+    if (newPinned) {
+      // Pinning the overlay
+      console.log("Pinning overlay bar...");
+      // Reset both disable flags when user manually pins
+      DISABLE_PIN_ON_SHOW.current = false;
+      DISABLE_NOTCH_ON_SHOW.current = false;
+      console.log("Pin: Reset notch disable flag for proper timing");
+
+      // Ensure window is visible and on top
+      const window = getCurrentWebviewWindow();
+      await window.show();
+      await window.setAlwaysOnTop(true);
+      await window.setFocus();
+
+      // Center the overlay at the top of the screen
+      const currentSize = await window.outerSize();
+      await resize(currentSize.width, currentSize.height, true);
+
+      console.log("Overlay pinned and centered at top");
+    } else {
+      // Unpinning the overlay
+      console.log("Unpinned overlay bar");
+      setIsNotch(false);
       if (notchTimeoutRef.current) {
         clearTimeout(notchTimeoutRef.current);
+        notchTimeoutRef.current = null;
       }
-      return newPinned;
-    });
+    }
+
+    setIsPinned(newPinned);
   };
 
   // Handle image paste

@@ -5,7 +5,7 @@ import type { UnlistenFn } from "@tauri-apps/api/event";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect, useRef, useState } from "react";
-import Overlay from "./components/OverlayCard";
+import OverlayCard from "./components/OverlayCard";
 import { resize } from "@/utils/windowUtils";
 import { motion } from "motion/react";
 
@@ -15,7 +15,7 @@ interface ChatMessage {
 }
 
 // DEV FLAG: Set to false to disable MagicDot for development
-const DEV_MAGIC_DOT_ENABLED = true;
+const DEV_MAGIC_DOT_ENABLED = false;
 
 const MagicDot = () => {
   const [expanded, setExpanded] = useState(true); // Expanded bar state
@@ -187,7 +187,7 @@ const MagicDot = () => {
           }}
           className="size-full flex justify-start align-start"
         >
-          <Overlay />
+          <OverlayCard />
         </div>
       ) : (
         // Collapsed notch UI: mac-style notch (flat top, rounded bottom corners)
@@ -236,4 +236,4 @@ const MagicDot = () => {
   );
 };
 
-export default DEV_MAGIC_DOT_ENABLED ? MagicDot : () => null;
+export default DEV_MAGIC_DOT_ENABLED ? MagicDot : OverlayCard;
