@@ -1,17 +1,23 @@
+use base64::{engine::general_purpose, Engine};
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use futures_util::{SinkExt, StreamExt};
+use serde_json::json;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use futures_util::{SinkExt, StreamExt};
+use tauri::{AppHandle, Emitter};
 use tokio::time::interval;
 use tokio_tungstenite::connect_async;
 use tungstenite::protocol::Message;
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use serde_json::json;
-use base64::{Engine, engine::general_purpose};
-use tauri::{AppHandle, Emitter};
 
 pub struct AudioState(pub Mutex<bool>);
 
-static AUDIO_CLIENT_RUNNING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+static AUDIO_CLIENT_RUNNING: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
+// TODO: Store the stream in a static to keep it alive
+// This is currently stubbed out due to Send trait issues with cpal::Stream
+// static AUDIO_STREAM: once_cell::sync::Lazy<Mutex<Option<cpal::Stream>>> =
+//     once_cell::sync::Lazy::new(|| Mutex::new(None));
 
 // Convert f32 samples to 16-bit PCM (matching React floatTo16BitPCM)
 fn float_to_16bit_pcm(input: &[f32]) -> Vec<u8> {
@@ -93,7 +99,10 @@ pub async fn run_audio_client(app_handle: AppHandle) {
     let host = cpal::default_host();
     let device = match host.default_output_device() {
         Some(device) => {
-            println!("🔊 Using system audio device: {}", device.name().unwrap_or("Unknown".to_string()));
+            println!(
+                "🔊 Using system audio device: {}",
+                device.name().unwrap_or("Unknown".to_string())
+            );
             device
         }
         None => {
@@ -113,40 +122,52 @@ pub async fn run_audio_client(app_handle: AppHandle) {
     };
 
     let sample_rate = config.sample_rate().0;
-    println!("🔧 Audio config: {} channels, {} Hz, {:?}", config.channels(), sample_rate, config.sample_format());
+    println!(
+        "🔧 Audio config: {} channels, {} Hz, {:?}",
+        config.channels(),
+        sample_rate,
+        config.sample_format()
+    );
 
-    // Create audio stream (matching React audio processing)
-    let buffer_clone = buffer.clone();
-    let stream = match config.sample_format() {
-        cpal::SampleFormat::F32 => device.build_input_stream(
-            &config.into(),
-            move |data: &[f32], _| {
-                let mut buf = buffer_clone.lock().unwrap();
-                buf.extend_from_slice(data);
-            },
-            move |err| eprintln!("❌ Stream error: {:?}", err),
-            None,
-        ),
-        _ => {
-            eprintln!("❌ Unsupported format: {:?}", config.sample_format());
+    // Create audio stream (matching React audio processing) and store it immediately
+    {
+        let buffer_clone = buffer.clone();
+        let stream = match config.sample_format() {
+            cpal::SampleFormat::F32 => device.build_input_stream(
+                &config.into(),
+                move |data: &[f32], _| {
+                    let mut buf = buffer_clone.lock().unwrap();
+                    buf.extend_from_slice(data);
+                },
+                move |err| eprintln!("❌ Stream error: {:?}", err),
+                None,
+            ),
+            _ => {
+                eprintln!("❌ Unsupported format: {:?}", config.sample_format());
+                AUDIO_CLIENT_RUNNING.store(false, std::sync::atomic::Ordering::Relaxed);
+                return;
+            }
+        };
+
+        let stream = match stream {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("❌ Failed to build audio stream: {}", e);
+                AUDIO_CLIENT_RUNNING.store(false, std::sync::atomic::Ordering::Relaxed);
+                return;
+            }
+        };
+
+        if let Err(e) = stream.play() {
+            eprintln!("❌ Failed to start audio stream: {}", e);
             AUDIO_CLIENT_RUNNING.store(false, std::sync::atomic::Ordering::Relaxed);
             return;
         }
-    };
 
-    let stream = match stream {
-        Ok(s) => s,
-        Err(e) => {
-            eprintln!("❌ Failed to build audio stream: {}", e);
-            AUDIO_CLIENT_RUNNING.store(false, std::sync::atomic::Ordering::Relaxed);
-            return;
-        }
-    };
-
-    if let Err(e) = stream.play() {
-        eprintln!("❌ Failed to start audio stream: {}", e);
-        AUDIO_CLIENT_RUNNING.store(false, std::sync::atomic::Ordering::Relaxed);
-        return;
+        // TODO: Store stream in static to keep it alive
+        // For now, we leak the stream to keep it alive (not ideal but works)
+        // *AUDIO_STREAM.lock().unwrap() = Some(stream);
+        std::mem::forget(stream);
     }
 
     println!("✅ System audio capture started");
@@ -154,7 +175,7 @@ pub async fn run_audio_client(app_handle: AppHandle) {
     // Send audio every 200ms (matching React pattern exactly)
     let buffer_clone = buffer.clone();
     let mut write_clone = write;
-    tokio::spawn(async move {
+    let send_handle = tokio::spawn(async move {
         let mut interval = interval(Duration::from_millis(200));
 
         while AUDIO_CLIENT_RUNNING.load(std::sync::atomic::Ordering::Relaxed) {
@@ -238,6 +259,13 @@ pub async fn run_audio_client(app_handle: AppHandle) {
 
     // Cleanup
     AUDIO_CLIENT_RUNNING.store(false, std::sync::atomic::Ordering::Relaxed);
+
+    // Abort the send task
+    send_handle.abort();
+
+    // TODO: Drop the stream
+    // *AUDIO_STREAM.lock().unwrap() = None;
+
     println!("🔇 Audio client stopped");
 }
 

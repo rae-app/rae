@@ -147,24 +147,12 @@ pub fn inject_text_to_window_by_title(text: String, window_title: String) -> Res
     {
         // On macOS, find window by title
         use crate::platform::platform_impl::*;
-        use core_foundation::array::{CFArray, CFArrayRef};
-        use core_foundation::base::TCFType;
-        use core_foundation::dictionary::CFDictionaryRef;
 
-        let window_list_ptr = unsafe {
-            core_graphics::window::CGWindowListCopyWindowInfo(
-                core_graphics::window::kCGWindowListOptionOnScreenOnly,
-                core_graphics::window::kCGNullWindowID,
-            )
-        };
-
-        if window_list_ptr.is_null() {
-            return Err("Failed to get window list".to_string());
-        }
-
-        let _window_list = unsafe {
-            CFArray::<CFDictionaryRef>::wrap_under_create_rule(window_list_ptr as CFArrayRef)
-        };
+        let window_list = core_graphics::window::CGWindowListCopyWindowInfo(
+            core_graphics::window::kCGWindowListOptionOnScreenOnly,
+            core_graphics::window::kCGNullWindowID,
+        )
+        .ok_or("Failed to get window list")?;
 
         // Search for window with matching title (simplified for now)
         Err(format!(
@@ -251,6 +239,80 @@ fn inject_text_via_clipboard(text: String, hwnd: WindowHandle) -> Result<(), Str
         }
 
         #[cfg(target_os = "macos")]
+        fn inject_text_via_clipboard(text: String, _window_id: WindowHandle) -> Result<(), String> {
+            println!(
+                "🔄 Starting clipboard injection for {} characters",
+                text.len()
+            );
+
+            unsafe {
+                let pool = NSAutoreleasePool::new(nil);
+
+                // Get general pasteboard
+                let pasteboard: id = msg_send![class!(NSPasteboard), generalPasteboard];
+
+                // Clear pasteboard
+                let _: () = msg_send![pasteboard, clearContents];
+
+                // Create NSString from text
+                let ns_string = NSString::from_str(&text);
+
+                // Write string to pasteboard
+                let array: id = msg_send![class!(NSArray), arrayWithObject: ns_string];
+                let success: bool = msg_send![pasteboard, writeObjects: array];
+
+                if !success {
+                    let _ = msg_send![pool, drain];
+                    return Err("Failed to write to clipboard".to_string());
+                }
+
+                std::thread::sleep(std::time::Duration::from_millis(50));
+
+                // Simulate Command+V
+                let source = CGEventSource::new(CGEventSourceStateID::CombinedSessionState)
+                    .ok_or("Failed to create event source")?;
+
+                // Command key down
+                let cmd_down = CGEvent::new_keyboard_event(source.clone(), 0x37, true) // 0x37 is Command key
+                    .ok_or("Failed to create command down event")?;
+                cmd_down.post(CGEventTapLocation::HID);
+
+                std::thread::sleep(std::time::Duration::from_millis(10));
+
+                // V key down
+                let v_down = CGEvent::new_keyboard_event(source.clone(), 0x09, true) // 0x09 is V key
+                    .ok_or("Failed to create V down event")?;
+                v_down.set_flags(core_graphics::event::CGEventFlags::CGEventFlagCommand);
+                v_down.post(CGEventTapLocation::HID);
+
+                std::thread::sleep(std::time::Duration::from_millis(10));
+
+                // V key up
+                let v_up = CGEvent::new_keyboard_event(source.clone(), 0x09, false)
+                    .ok_or("Failed to create V up event")?;
+                v_up.set_flags(core_graphics::event::CGEventFlags::CGEventFlagCommand);
+                v_up.post(CGEventTapLocation::HID);
+
+                std::thread::sleep(std::time::Duration::from_millis(10));
+
+                // Command key up
+                let cmd_up = CGEvent::new_keyboard_event(source, 0x37, false)
+                    .ok_or("Failed to create command up event")?;
+                cmd_up.post(CGEventTapLocation::HID);
+
+                let _ = msg_send![pool, drain];
+
+                println!("✅ Clipboard injection completed successfully");
+                Ok(())
+            }
+        }
+
+        // Close clipboard
+        CloseClipboard();
+
+        // Send Ctrl+V to paste
+        std::thread::sleep(std::time::Duration::from_millis(50));
+
         // Press Ctrl
         let mut ctrl_down = INPUT {
             type_: INPUT_KEYBOARD,
@@ -317,104 +379,6 @@ fn inject_text_via_clipboard(text: String, hwnd: WindowHandle) -> Result<(), Str
     }
 }
 
-#[cfg(target_os = "macos")]
-fn inject_text_via_clipboard(text: String, _window_id: WindowHandle) -> Result<(), String> {
-    use cocoa::appkit::NSPasteboard;
-    use cocoa::base::{id, nil};
-    use cocoa::foundation::{NSAutoreleasePool, NSString};
-    use core_graphics::event::{CGEvent, CGEventTapLocation};
-    use core_graphics::event_source::{CGEventSource, CGEventSourceStateID};
-    use objc::{class, msg_send, sel, sel_impl};
-    use objc_foundation::INSString;
-
-    println!(
-        "🔄 Starting clipboard injection for {} characters",
-        text.len()
-    );
-
-    unsafe {
-        let pool = NSAutoreleasePool::new(nil);
-
-        // Get general pasteboard
-        let pasteboard: id = msg_send![class!(NSPasteboard), generalPasteboard];
-
-        // Clear pasteboard
-        let _: () = msg_send![pasteboard, clearContents];
-
-        // Create NSString from text
-        let ns_string: id = msg_send![class!(NSString), stringWithUTF8String: text.as_ptr()];
-
-        // Write string to pasteboard
-        let array: id = msg_send![class!(NSArray), arrayWithObject: ns_string];
-        let success: bool = msg_send![pasteboard, writeObjects: array];
-
-        if !success {
-            let _: () = msg_send![pool, drain];
-            return Err("Failed to write to clipboard".to_string());
-        }
-
-        println!("✅ Clipboard injection completed successfully");
-        // Simulate Command+V
-        let source = match CGEventSource::new(CGEventSourceStateID::CombinedSessionState) {
-            Ok(s) => s,
-            Err(_) => {
-                let _: () = msg_send![pool, drain];
-                return Err("Failed to create event source".to_string());
-            }
-        };
-
-        // Command key down (0x37)
-        let cmd_down = match CGEvent::new_keyboard_event(source.clone(), 0x37, true) {
-            Ok(e) => e,
-            Err(_) => {
-                let _: () = msg_send![pool, drain];
-                return Err("Failed to create command down event".to_string());
-            }
-        };
-        cmd_down.post(CGEventTapLocation::HID);
-
-        std::thread::sleep(std::time::Duration::from_millis(10));
-
-        // V key down (0x09)
-        let v_down = match CGEvent::new_keyboard_event(source.clone(), 0x09, true) {
-            Ok(e) => e,
-            Err(_) => {
-                let _: () = msg_send![pool, drain];
-                return Err("Failed to create V down event".to_string());
-            }
-        };
-        v_down.set_flags(core_graphics::event::CGEventFlags::CGEventFlagCommand);
-        v_down.post(CGEventTapLocation::HID);
-
-        std::thread::sleep(std::time::Duration::from_millis(10));
-
-        // V key up
-        let v_up = match CGEvent::new_keyboard_event(source.clone(), 0x09, false) {
-            Ok(e) => e,
-            Err(_) => {
-                let _: () = msg_send![pool, drain];
-                return Err("Failed to create V up event".to_string());
-            }
-        };
-        v_up.set_flags(core_graphics::event::CGEventFlags::CGEventFlagCommand);
-        v_up.post(CGEventTapLocation::HID);
-
-        std::thread::sleep(std::time::Duration::from_millis(10));
-
-        // Command key up
-        let cmd_up = match CGEvent::new_keyboard_event(source, 0x37, false) {
-            Ok(e) => e,
-            Err(_) => {
-                let _: () = msg_send![pool, drain];
-                return Err("Failed to create command up event".to_string());
-            }
-        };
-        cmd_up.post(CGEventTapLocation::HID);
-
-        let _: () = msg_send![pool, drain];
-        Ok(())
-    }
-}
 #[derive(serde::Serialize)]
 pub struct WindowInfo {
     pub hwnd: isize,
@@ -437,6 +401,12 @@ pub fn capture_window_screenshot() -> Result<String, String> {
         let screen_dc = GetDC(std::ptr::null_mut());
         if screen_dc.is_null() {
             return Err("Failed to get screen DC".to_string());
+        }
+
+        #[cfg(target_os = "macos")]
+        #[tauri::command]
+        pub fn capture_window_screenshot() -> Result<String, String> {
+            crate::platform::platform_impl::capture_full_screenshot()
         }
 
         // Create memory DC
@@ -555,11 +525,6 @@ pub fn capture_window_screenshot() -> Result<String, String> {
     }
 }
 
-#[cfg(target_os = "macos")]
-#[tauri::command]
-pub fn capture_window_screenshot() -> Result<String, String> {
-    crate::platform::capture_full_screenshot()
-}
 #[cfg(target_os = "windows")]
 fn capture_hwnd_to_png_base64(hwnd: WindowHandle) -> Result<String, String> {
     unsafe {

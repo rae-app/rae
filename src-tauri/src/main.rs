@@ -1,10 +1,13 @@
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![cfg_attr(
+    all(not(debug_assertions), target_os = "windows"),
+    windows_subsystem = "windows"
+)]
 
 // Declare the modules that make up the application logic.
+mod audio_client;
 mod functions;
 mod platform;
 mod utils;
-mod audio_client;
 
 // Import required traits
 use audio_client::AudioState;
@@ -134,7 +137,7 @@ fn main() {
         .setup(|app| {
             let app_handle = app.handle().clone();
             app.manage(TrayState(Mutex::new(false)));
-app.manage(AudioState(Mutex::new(false)));
+            app.manage(AudioState(Mutex::new(false)));
             // Log startup time for debugging
             println!(
                 "Rae app started successfully at {:?}",

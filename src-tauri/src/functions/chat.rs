@@ -1,4 +1,3 @@
-use enigo::{Enigo, MouseControllable};
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Emitter};
 
@@ -10,11 +9,13 @@ static RAE_WATCHER_ENABLED: AtomicBool = AtomicBool::new(false);
 static RAE_WATCHER_RUNNING: AtomicBool = AtomicBool::new(false);
 static NOTCH_WINDOW_DISPLAY_ENABLED: AtomicBool = AtomicBool::new(false);
 
+#[cfg(target_os = "windows")]
 use winapi::um::winuser::{
     GetAsyncKeyState, GetClipboardSequenceNumber, IsClipboardFormatAvailable, CF_UNICODETEXT,
     VK_LBUTTON,
 };
 
+#[cfg(target_os = "windows")]
 unsafe fn read_clipboard_unicode_text() -> Option<String> {
     use std::ffi::OsString;
     use std::os::windows::ffi::OsStringExt;
@@ -49,7 +50,36 @@ unsafe fn read_clipboard_unicode_text() -> Option<String> {
     Some(text)
 }
 
-fn ensure_clipboard_watcher_started(app: &AppHandle) {
+#[cfg(target_os = "macos")]
+unsafe fn read_clipboard_unicode_text() -> Option<String> {
+    use cocoa::appkit::NSPasteboard;
+    use cocoa::base::{id, nil};
+    use cocoa::foundation::NSAutoreleasePool;
+    use objc::{class, msg_send, sel, sel_impl};
+    use objc_foundation::{INSString, NSString};
+
+    let pool = NSAutoreleasePool::new(nil);
+    let pasteboard: id = msg_send![class!(NSPasteboard), generalPasteboard];
+    let contents: id = msg_send![pasteboard, stringForType: cocoa::appkit::NSPasteboardTypeString];
+
+    if contents == nil {
+        let _: () = msg_send![pool, drain];
+        return None;
+    }
+    let _: () = msg_send![pool, drain];
+    let contents_str: *const i8 = msg_send![contents, UTF8String];
+    if contents_str.is_null() {
+        let _: () = msg_send![pool, drain];
+        return None;
+    }
+    let c_str = std::ffi::CStr::from_ptr(contents_str);
+    let result = Some(c_str.to_string_lossy().into_owned());
+    result
+}
+
+#[cfg(target_os = "windows")]
+#[cfg(target_os = "windows")]
+fn ensure_clipboard_watcher_started(app: AppHandle) {
     if CLIPBOARD_WATCHER_RUNNING.swap(true, Ordering::SeqCst) {
         return;
     }
@@ -83,11 +113,108 @@ fn ensure_clipboard_watcher_started(app: &AppHandle) {
                     last_text = current.clone();
                 }
             }
+
+            #[cfg(target_os = "macos")]
+            #[cfg(target_os = "windows")]
+            fn ensure_selection_watcher_started(app: AppHandle) {
+                if CLIPBOARD_WATCHER_RUNNING.swap(true, Ordering::Relaxed) {
+                    return;
+                }
+                std::thread::spawn(move || {
+                    use cocoa::appkit::NSPasteboard;
+                    use cocoa::base::{id, nil};
+                    use cocoa::foundation::NSAutoreleasePool;
+                    use objc::{class, msg_send};
+
+                    let mut last_change_count: i64 = -1;
+                    let mut last_text: Option<String> = None;
+
+                    loop {
+                        if !CLIPBOARD_WATCHER_RUNNING.load(Ordering::Relaxed) {
+                            break;
+                        }
+
+                        unsafe {
+                            let pool = NSAutoreleasePool::new(nil);
+                            let pasteboard: id = msg_send![class!(NSPasteboard), generalPasteboard];
+                            let change_count: i64 = msg_send![pasteboard, changeCount];
+
+                            if change_count != last_change_count {
+                                last_change_count = change_count;
+
+                                if let Some(current_text) = read_clipboard_unicode_text() {
+                                    if last_text.as_ref() != Some(&current_text) {
+                                        last_text = Some(current_text.clone());
+
+                                        if AUTO_SHOW_ON_COPY.load(Ordering::Relaxed) {
+                                            let _ = app.emit("clipboard_changed", current_text);
+                                        }
+                                    }
+                                }
+                            }
+                            let _: () = msg_send![pool, drain];
+                        }
+
+                        std::thread::sleep(std::time::Duration::from_millis(100));
+                    }
+                });
+            }
             std::thread::sleep(std::time::Duration::from_millis(250));
         }
     });
 }
 
+#[cfg(target_os = "macos")]
+fn ensure_clipboard_watcher_started(app: AppHandle) {
+    if CLIPBOARD_WATCHER_RUNNING.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    let app_handle = app.clone();
+    std::thread::spawn(move || {
+        use cocoa::appkit::NSPasteboard;
+        use cocoa::base::{id, nil};
+        use cocoa::foundation::NSAutoreleasePool;
+        use objc::{class, msg_send, sel, sel_impl};
+
+        let mut last_change_count: i64 = -1;
+        let mut last_text: Option<String> = None;
+
+        loop {
+            if !AUTO_SHOW_ON_COPY.load(Ordering::Relaxed) {
+                CLIPBOARD_WATCHER_RUNNING.store(false, Ordering::SeqCst);
+                break;
+            }
+
+            unsafe {
+                let pool = NSAutoreleasePool::new(nil);
+                let pasteboard: id = msg_send![class!(NSPasteboard), generalPasteboard];
+                let change_count: i64 = msg_send![pasteboard, changeCount];
+
+                if change_count != last_change_count {
+                    last_change_count = change_count;
+
+                    if let Some(current_text) = read_clipboard_unicode_text() {
+                        let current_text = current_text.trim().to_string();
+                        if !current_text.is_empty() {
+                            if last_text.as_ref() != Some(&current_text) {
+                                last_text = Some(current_text.clone());
+                                let _ = app_handle.emit(
+                                    "clipboard_text_copied",
+                                    serde_json::json!({ "text": current_text }),
+                                );
+                            }
+                        }
+                    }
+                }
+                let _: () = msg_send![pool, drain];
+            }
+
+            std::thread::sleep(std::time::Duration::from_millis(250));
+        }
+    });
+}
+
+#[cfg(target_os = "windows")]
 fn ensure_selection_watcher_started(app: &AppHandle) {
     if SELECTION_WATCHER_RUNNING.swap(true, Ordering::SeqCst) {
         return;
@@ -172,6 +299,17 @@ fn ensure_selection_watcher_started(app: &AppHandle) {
                                 last_fallback_emit_at = Some(std::time::Instant::now());
                             }
                         }
+
+                        #[cfg(target_os = "macos")]
+                        #[cfg(target_os = "windows")]
+                        fn ensure_rae_watcher_started(app: AppHandle) {
+                            if SELECTION_WATCHER_RUNNING.swap(true, Ordering::Relaxed) {
+                                return;
+                            }
+                            // macOS text selection monitoring would require Accessibility API
+                            // This is a placeholder for future implementation
+                            println!("Selection watcher not yet implemented for macOS");
+                        }
                     }
                     drag_origin = None;
                     did_drag = false;
@@ -219,6 +357,16 @@ fn ensure_selection_watcher_started(app: &AppHandle) {
                         }
                     }
                 }
+
+                #[cfg(target_os = "macos")]
+                fn ensure_rae_watcher_started(_app: AppHandle) {
+                    if RAE_WATCHER_RUNNING.swap(true, Ordering::Relaxed) {
+                        return;
+                    }
+                    // macOS keyboard hook would require CGEventTap
+                    // This is a placeholder for future implementation
+                    println!("Rae watcher not yet implemented for macOS");
+                }
                 std::thread::sleep(std::time::Duration::from_millis(30));
             }
             CoUninitialize();
@@ -226,6 +374,7 @@ fn ensure_selection_watcher_started(app: &AppHandle) {
     });
 }
 
+#[cfg(target_os = "windows")]
 fn ensure_rae_watcher_started(app: &AppHandle) {
     if RAE_WATCHER_RUNNING.swap(true, Ordering::SeqCst) {
         return;
@@ -353,11 +502,30 @@ fn ensure_rae_watcher_started(app: &AppHandle) {
     });
 }
 
+#[cfg(target_os = "macos")]
+fn ensure_selection_watcher_started(_app: &AppHandle) {
+    if SELECTION_WATCHER_RUNNING.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    // macOS text selection monitoring requires Accessibility API
+    // Placeholder for future implementation
+    println!("Selection watcher not yet fully implemented for macOS");
+}
+
+#[cfg(target_os = "macos")]
+fn ensure_rae_watcher_started(_app: &AppHandle) {
+    if RAE_WATCHER_RUNNING.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    // macOS keyboard hook requires CGEventTap
+    // Placeholder for future implementation
+    println!("Rae watcher not yet fully implemented for macOS");
+}
 #[tauri::command]
 pub fn set_auto_show_on_copy_enabled(app: AppHandle, enabled: bool) {
     AUTO_SHOW_ON_COPY.store(enabled, Ordering::Relaxed);
     if enabled {
-        ensure_clipboard_watcher_started(&app);
+        ensure_clipboard_watcher_started(app.clone());
     }
 }
 

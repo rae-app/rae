@@ -292,7 +292,7 @@ pub fn toggle_magic_dot(app: AppHandle) {
     }
     let _ = WebviewWindowBuilder::new(&app, "overlay", WebviewUrl::App("/overlay".into()))
         .title("overlay")
-        .transparent(true)
+        .decorations(false)
         .decorations(false)
         .resizable(false)
         .shadow(false)
@@ -424,7 +424,7 @@ pub fn show_magic_dot(app: AppHandle) {
 
     let _ = WebviewWindowBuilder::new(&app, "overlay", WebviewUrl::App("/overlay".into()))
         .title("overlay")
-        .transparent(true)
+        .decorations(false)
         .decorations(false)
         .resizable(false)
         .shadow(false)
