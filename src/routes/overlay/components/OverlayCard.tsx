@@ -155,8 +155,6 @@ const Overlay = () => {
   // Refs for dragging and notch timeout
   const notchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const inputActiveRef = useRef(inputActive);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const { email } = useUserStore();
   const { setNotes } = useNoteStore();
   const fetchNotes = async () => {
@@ -755,36 +753,40 @@ const Overlay = () => {
     }
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!isPinned) {
-      setIsDragging(true);
-      dragStartRef.current = { x: e.clientX, y: e.clientY };
+  const handleDragMouseDown = (e: React.MouseEvent) => {
+    if (!isPinned && !isNotch) {
+      // Check if clicking on interactive element
+      const target = e.target as HTMLElement;
+      const isInteractive =
+        target.tagName === "BUTTON" ||
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.closest("button") ||
+        target.closest("input") ||
+        target.closest("textarea");
+
+      if (isInteractive) {
+        console.log("⚠️ Clicked on interactive element");
+        return;
+      }
+
+      console.log(
+        "🖱️ Attempting to drag - isPinned:",
+        isPinned,
+        "isNotch:",
+        isNotch,
+      );
+      e.preventDefault();
+
+      const window = getCurrentWebviewWindow();
+      window
+        .startDragging()
+        .then(() => console.log("✅ Drag initiated"))
+        .catch((error) => console.error("❌ Drag failed:", error));
+    } else {
+      console.log("⚠️ Drag blocked - isPinned:", isPinned, "isNotch:", isNotch);
     }
   };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || isPinned || !dragStartRef.current) return;
-    const deltaX = Math.abs(e.clientX - dragStartRef.current.x);
-    const deltaY = Math.abs(e.clientY - dragStartRef.current.y);
-
-    if (deltaX > 5 || deltaY > 5) {
-      // When dragging while not pinned, we can implement actual window dragging here
-      // For now, just reset the drag state
-      setIsDragging(false);
-      dragStartRef.current = null;
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    dragStartRef.current = null;
-  };
-
-  useEffect(() => {
-    const handleGlobalMouseUp = () => setIsDragging(false);
-    document.addEventListener("mouseup", handleGlobalMouseUp);
-    return () => document.removeEventListener("mouseup", handleGlobalMouseUp);
-  }, []);
 
   const handlePinClick = async () => {
     const newPinned = !isPinned;
@@ -1067,13 +1069,10 @@ const Overlay = () => {
           duration: animations.overlayExpand,
           ease: "circOut",
         }}
-        className={`${getNotchClasses(isNotch)} `}
+        className={`${getNotchClasses(isNotch)}`}
         style={getNotchStyle(isNotch)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
       >
         {/* Header bar */}
         <motion.div
@@ -1088,10 +1087,9 @@ const Overlay = () => {
             opacity: { duration: 0.2, ease: "easeOut" },
             y: { duration: 0.3, ease: "easeOut" },
           }}
-          className={`flex items-center z-[100000] dark:bg-[#010101] bg-white   h-[44px] shrink-0 ${
-            !isPinned ? "drag" : ""
-          } ${isNotch ? "pointer-events-none" : ""}`}
+          className={`flex items-center z-[100000] dark:bg-[#010101] bg-white h-[44px] shrink-0 ${isNotch ? "pointer-events-none" : ""} ${!isPinned && !isNotch ? "cursor-move" : "cursor-default"}`}
           style={{ borderRadius: "12px" }}
+          onMouseDown={handleDragMouseDown}
         >
           <div className="p-1 w-fit h-full">
             <OverlayButton
@@ -1105,18 +1103,12 @@ const Overlay = () => {
             </OverlayButton>
           </div>
 
-          <div
-            className={`group ${
-              !isPinned ? "drag" : ""
-            } flex-1 h-full flex items-center w-full`}
-          >
+          <div className="group flex-1 h-full flex items-center w-full">
             {!showChat && !isMaximized ? (
               inputActive ? (
                 <div
                   key="overlay-card"
-                  className={`relative flex w-full h-full items-center border-l border-border px-4 py-2 ${
-                    !isPinned ? "drag" : ""
-                  }   max-w-xs`}
+                  className="relative flex w-full h-full items-center border-l border-border px-4 py-2 max-w-xs"
                 >
                   <input
                     autoFocus
@@ -1235,7 +1227,7 @@ const Overlay = () => {
                 )}
               </div>
             ) : (
-              <div className="size-full drag"></div>
+              <div className="size-full"></div>
             )}
           </div>
 

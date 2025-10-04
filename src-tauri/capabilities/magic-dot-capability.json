@@ -18,6 +18,7 @@
     "core:window:allow-create",
     "core:window:allow-set-focus",
     "core:window:allow-set-always-on-top",
+    "core:window:allow-start-dragging",
     "core:webview:allow-create-webview-window"
   ]
 }
