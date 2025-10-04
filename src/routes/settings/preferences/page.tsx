@@ -89,7 +89,8 @@ const Preferences = () => {
     invoke<boolean>("get_auto_start_enabled")
       .then(async (currentlyEnabled) => {
         // Check what was stored in localStorage
-        const storedPreference = localStorage.getItem("auto_start_enabled") === "true";
+        const storedPreference =
+          localStorage.getItem("auto_start_enabled") === "true";
 
         if (storedPreference && !currentlyEnabled) {
           // User wants it enabled but it's not currently enabled, so enable it
@@ -135,10 +136,6 @@ const Preferences = () => {
   useEffect(() => {
     initializeTheme();
   }, [initializeTheme]);
-
-  const [gradient, setGradient] = useState<boolean>(
-    localStorage.getItem("gradient") === "true",
-  );
 
   return (
     <div className="w-full h-full bg-background text-foreground  overflow-y-auto">
@@ -186,7 +183,9 @@ const Preferences = () => {
                   "overlay_reset_tool_after_send",
                   String(next),
                 );
-                emit("overlay_reset_tool_after_send_changed", { enabled: next });
+                emit("overlay_reset_tool_after_send_changed", {
+                  enabled: next,
+                });
               }}
             />
             <div>
@@ -200,22 +199,29 @@ const Preferences = () => {
                     await invoke("set_auto_start_enabled", {
                       enabled: next,
                     });
-                    console.log(`Auto-start ${next ? 'enabled' : 'disabled'} successfully`);
+                    console.log(
+                      `Auto-start ${next ? "enabled" : "disabled"} successfully`,
+                    );
                     if (next) {
-                      alert("Auto-start enabled! The app will now run as administrator when Windows starts. You may see a UAC prompt on startup.");
+                      alert(
+                        "Auto-start enabled! The app will now run as administrator when Windows starts. You may see a UAC prompt on startup.",
+                      );
                     }
                   } catch (error) {
                     console.error("Failed to toggle auto-start:", error);
                     // Revert the UI state if the operation failed
                     setAutoStartEnabled(!next);
                     localStorage.setItem("auto_start_enabled", String(!next));
-                    alert(`Failed to ${next ? 'enable' : 'disable'} auto-start. Please run the app as administrator and try again.`);
+                    alert(
+                      `Failed to ${next ? "enable" : "disable"} auto-start. Please run the app as administrator and try again.`,
+                    );
                   }
                 }}
               />
               {autoStartEnabled && (
                 <div className="px-5 py-2 text-xs text-foreground/60">
-                  Note: Rae will run with administrator privileges on startup to ensure all features work properly.
+                  Note: Rae will run with administrator privileges on startup to
+                  ensure all features work properly.
                 </div>
               )}
             </div>
@@ -244,19 +250,6 @@ const Preferences = () => {
         <Card>
           <SectionHeader title="Appearance" />
           <div className="divide-y divide-border">
-            <ToggleRow
-              label="Gradient in notch"
-              enabled={gradient}
-              onToggle={async (next) => {
-                console.log("Toggling gradient to:", next);
-                localStorage.setItem("gradient", String(next));
-                console.log("Emitting gradient_changed event with:", {
-                  gradient: next,
-                });
-                emit("gradient_changed", { gradient: next });
-                setGradient(next);
-              }}
-            />
             <ToggleRow
               label="Show window info in notch"
               enabled={notchWindowDisplay}

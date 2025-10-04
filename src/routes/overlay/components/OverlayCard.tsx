@@ -23,7 +23,6 @@ import {
   Maximize2,
 } from "lucide-react";
 import notchSound from "../../../assets/sounds/bubble-pop-06-351337.mp3";
-import gradientGif from "../../../assets/gradient.gif";
 import { invoke } from "@tauri-apps/api/core";
 import { animations } from "@/constants/animations";
 import { useUserStore } from "@/store/userStore";
@@ -87,29 +86,20 @@ const DISABLE_SAFETY_NOTCH = { current: false };
 /**
  * Helper functions for notch styling and layout
  */
-const getNotchClasses = (isNotch: boolean, showGradient: boolean) => {
+const getNotchClasses = (isNotch: boolean) => {
   const baseClasses = "flex flex-col  min-h-0 overflow-hidden";
 
   if (!isNotch) return `${baseClasses} text-foreground`;
 
   const notchClasses =
     "w-[360px] h-24 -mt-2 border-border backdrop-blur-sm absolute  overflow-hidden";
-  const backgroundClasses = showGradient
-    ? "bg-white/80 dark:bg-black/80"
-    : "dark:bg-black bg-white";
+  const backgroundClasses = "dark:bg-black bg-white";
 
   return `${baseClasses} ${notchClasses} ${backgroundClasses}`;
 };
 
 const getNotchStyle = (isNotch: boolean) =>
   isNotch ? { boxShadow: NOTCH_SHADOW } : {};
-
-const getGradientBackgroundStyle = (gradientGif: string) => ({
-  backgroundImage: `url(${gradientGif})`,
-  backgroundSize: "cover",
-  backgroundPosition: "center",
-  backgroundRepeat: "no-repeat",
-});
 
 const Overlay = () => {
   // State for the overlay shell itself
@@ -118,16 +108,16 @@ const Overlay = () => {
   const [listening, setlistening] = useState(false);
   const [assist, setAssist] = useState(false);
   const [assistMessage, setAssistMessage] = useState(
-    "Hello! Assist mode is now active. How can I help you?"
+    "Hello! Assist mode is now active. How can I help you?",
   );
   const [audioClientActive, setAudioClientActive] = useState(false);
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [bubbleSoundEnabled, setBubbleSoundEnabled] = useState<boolean>(
-    () => localStorage.getItem("bubble_sound_enabled") !== "false" // Default to true
+    () => localStorage.getItem("bubble_sound_enabled") !== "false", // Default to true
   );
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isActive, setIsActive] = useState<boolean>(
-    () => localStorage.getItem("overlay_active") !== "false" // Default to true if not set
+    () => localStorage.getItem("overlay_active") !== "false", // Default to true if not set
   );
   // Handler to spawn overlay-extended window
 
@@ -138,9 +128,6 @@ const Overlay = () => {
   const [inputActive, setInputActive] = useState(false);
   // const [showApp, setShowApp] = useState(false)
 
-  const [showGradient, setShowGradient] = useState<boolean>(
-    localStorage.getItem("gradient") === "true"
-  );
   // Respect preference to stop analyzing after send
   useEffect(() => {
     let unlistenFn: (() => void) | undefined;
@@ -200,7 +187,7 @@ const Overlay = () => {
       console.log("Clearing screenshot - toggle turned off");
       console.log(
         "Before clearing, windowScreenshot length:",
-        windowScreenshot.length
+        windowScreenshot.length,
       );
       setWindowScreenshot("");
       setShowScreenshot(false);
@@ -209,7 +196,7 @@ const Overlay = () => {
       // Capture screenshot immediately when toggle is turned on
       if (windowHwnd != null) {
         console.log(
-          "🔄 Capturing screenshot immediately after toggle enabled..."
+          "🔄 Capturing screenshot immediately after toggle enabled...",
         );
         console.log("📍 Current windowHwnd:", windowHwnd);
 
@@ -219,16 +206,16 @@ const Overlay = () => {
           .then((screenshot: string) => {
             console.log(
               "✅ Immediate screenshot captured, length:",
-              screenshot.length
+              screenshot.length,
             );
             if (screenshot.length > 0) {
               console.log(
                 "📸 Screenshot starts with:",
-                screenshot.substring(0, 50)
+                screenshot.substring(0, 50),
               );
               setWindowScreenshot(screenshot);
               console.log(
-                "💾 windowScreenshot state updated for chat functionality"
+                "💾 windowScreenshot state updated for chat functionality",
               );
             } else {
               console.log("❌ Screenshot captured but empty");
@@ -404,7 +391,7 @@ const Overlay = () => {
       DISABLE_NOTCH_ON_SHOW.current
     ) {
       console.log(
-        "Safety: Setting fallback notch timeout (10s) due to disabled flag"
+        "Safety: Setting fallback notch timeout (10s) due to disabled flag",
       );
       setTimeout(() => {
         if (
@@ -426,7 +413,7 @@ const Overlay = () => {
             });
         } else if (DISABLE_SAFETY_NOTCH.current) {
           console.log(
-            "Safety: Skipping notch enable - safety flag is active (recent center operation)"
+            "Safety: Skipping notch enable - safety flag is active (recent center operation)",
           );
         }
       }, 10000); // 10 second fallback
@@ -496,16 +483,6 @@ const Overlay = () => {
         }
       }),
 
-      listen("gradient_changed", (event) => {
-        console.log(
-          "OverlayCard: gradient_changed event received:",
-          event.payload
-        );
-        const gradient = event.payload as { gradient: boolean };
-        console.log("OverlayCard: Setting showGradient to:", gradient.gradient);
-        setShowGradient(gradient.gradient);
-      }),
-
       listen("toggle_pin_state", () => {
         console.log("OverlayCard: Received toggle_pin_state event");
         // Reset notch disable flag when using Ctrl+P to ensure proper 2s timeout
@@ -533,7 +510,7 @@ const Overlay = () => {
 
     return () => {
       eventListeners.forEach((promise) =>
-        promise.then((unlisten) => unlisten())
+        promise.then((unlisten) => unlisten()),
       );
     };
   }, []);
@@ -585,7 +562,7 @@ const Overlay = () => {
         }
         setAudioClientActive(false);
         setAssistMessage(
-          "Hello! Assist mode is now active. How can I help you?"
+          "Hello! Assist mode is now active. How can I help you?",
         );
       }
     };
@@ -653,14 +630,12 @@ const Overlay = () => {
 
               if (!isRunning) {
                 console.warn(
-                  "⚠️ Audio client stopped unexpectedly, restarting..."
+                  "⚠️ Audio client stopped unexpectedly, restarting...",
                 );
                 setAssistMessage("Reconnecting audio service...");
                 await invoke("start_audio_client");
                 setTimeout(() => {
-                  setAssistMessage(
-                    "Listening... Speak to interact with Rae."
-                  );
+                  setAssistMessage("Listening... Speak to interact with Rae.");
                 }, 2000);
               }
             } catch (error) {
@@ -701,7 +676,6 @@ const Overlay = () => {
           showChat,
           isNotch,
           inputActive,
-          showGradient,
           disableNotch: DISABLE_NOTCH_ON_SHOW.current,
           timeoutActive: !!notchTimeoutRef.current,
           NOTCH_TIMEOUT,
@@ -715,7 +689,7 @@ const Overlay = () => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPinned, showChat, isNotch, inputActive, showGradient]);
+  }, [isPinned, showChat, isNotch, inputActive]);
 
   const handleMouseLeave = () => {
     // Only set timeout if conditions are met and notch not disabled
@@ -769,7 +743,7 @@ const Overlay = () => {
           isNotch,
           inputActive,
           disableNotch: DISABLE_NOTCH_ON_SHOW.current,
-        }
+        },
       );
     }
   };
@@ -939,7 +913,7 @@ const Overlay = () => {
       "Screenshot state changed - showScreenshot:",
       showScreenshot,
       "screenshot length:",
-      windowScreenshot.length
+      windowScreenshot.length,
     );
   }, [showScreenshot, windowScreenshot]);
 
@@ -1051,30 +1025,30 @@ const Overlay = () => {
                 borderRadius: "0 0 28px 28px",
               }
             : showChat && isMaximized
-            ? {
-                scale: 1,
-                y: 0,
-                borderRadius: "0px",
-                width: EXPANDED_WIDTH,
-                height: "100%",
-                x: 0,
-                top: 0,
-                left: 0,
-              }
-            : {
-                scale: 1,
-                y: 0,
-                borderRadius: "12px",
-                width: DEFAULT_CHAT[0],
-                height: "100%",
-              }
+              ? {
+                  scale: 1,
+                  y: 0,
+                  borderRadius: "0px",
+                  width: EXPANDED_WIDTH,
+                  height: "100%",
+                  x: 0,
+                  top: 0,
+                  left: 0,
+                }
+              : {
+                  scale: 1,
+                  y: 0,
+                  borderRadius: "12px",
+                  width: DEFAULT_CHAT[0],
+                  height: "100%",
+                }
         }
         transition={{
           type: "tween",
           duration: animations.overlayExpand,
           ease: "circOut",
         }}
-        className={`${getNotchClasses(isNotch, showGradient)} `}
+        className={`${getNotchClasses(isNotch)} `}
         style={getNotchStyle(isNotch)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -1082,14 +1056,6 @@ const Overlay = () => {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       >
-        {/* Gradient background overlay */}
-        {isNotch && showGradient && (
-          <div
-            className={`absolute inset-0 ${GRADIENT_OPACITY} pointer-events-none`}
-            style={getGradientBackgroundStyle(gradientGif)}
-          />
-        )}
-
         {/* Header bar */}
         <motion.div
           animate={{
@@ -1243,9 +1209,7 @@ const Overlay = () => {
                       alt="Window screenshot"
                       className="min-w-[250px] max-h-[350px] rounded shadow-md"
                       onLoad={() => console.log(" Image loaded successfully")}
-                      onError={(e) =>
-                        console.error("Image failed to load:", e)
-                      }
+                      onError={(e) => console.error("Image failed to load:", e)}
                       style={{ imageRendering: "crisp-edges" }}
                     />
                   </div>
@@ -1316,7 +1280,7 @@ const Overlay = () => {
                   <div className="flex h-full items-center gap-1 ">
                     {/* Navigation buttons for maximized state - centered */}
                     <OverlayButton
-                      onClick={() => emit("navigate_to", {to: "/app/chat"})}
+                      onClick={() => emit("navigate_to", { to: "/app/chat" })}
                       active={currentPage === "chat"}
                       title="Chat"
                       draggable={!isPinned}
@@ -1324,15 +1288,19 @@ const Overlay = () => {
                       <ChatIcon className="" size={16} />
                     </OverlayButton>
                     <OverlayButton
-                      onClick={() => emit("navigate_to", {to: "/app/settings/preferences"})}
+                      onClick={() =>
+                        emit("navigate_to", { to: "/app/settings/preferences" })
+                      }
                       active={currentPage === "settings"}
                       title="Settings"
                       draggable={!isPinned}
                     >
-                      <GearSixIcon  size={16} />
+                      <GearSixIcon size={16} />
                     </OverlayButton>
                     <OverlayButton
-                      onClick={() => emit("navigate_to", {to: "/app/settings/preferences"})}
+                      onClick={() =>
+                        emit("navigate_to", { to: "/app/settings/preferences" })
+                      }
                       active={currentPage === "notes"}
                       title="Notes"
                       draggable={!isPinned}
@@ -1356,7 +1324,7 @@ const Overlay = () => {
                     <Maximize2 size={16} />
                   )}
                 </OverlayButton>
-                
+
                 {!isMaximized && (
                   <>
                     <OverlayButton
@@ -1371,14 +1339,14 @@ const Overlay = () => {
               </>
             ) : (
               <>
-              
-              <OverlayButton
-                onClick={handleOpenChat}
-                title="Open chat"
-                draggable={!isPinned}
-              >
-                <CornersOutIcon weight="bold" size={16} />
-              </OverlayButton></>
+                <OverlayButton
+                  onClick={handleOpenChat}
+                  title="Open chat"
+                  draggable={!isPinned}
+                >
+                  <CornersOutIcon weight="bold" size={16} />
+                </OverlayButton>
+              </>
             )}
           </div>
         </motion.div>
