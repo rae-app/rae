@@ -1,4 +1,3 @@
-import gradientGif from "@/assets/gradient.gif";
 import { useChatStore } from "@/store/chatStore";
 import { invoke } from "@tauri-apps/api/core";
 import { LogicalSize } from "@tauri-apps/api/dpi";
@@ -28,17 +27,6 @@ const MagicDot = () => {
   const [showInput, setShowInput] = useState(true); // NEW STATE
   const [windowName, setWindowName] = useState("");
   const [windowIcon, setWindowIcon] = useState("");
-  const [showGradient, setShowGradient] = useState<boolean>(
-    localStorage.getItem("gradient") === "true",
-  );
-
-  // Debug: Log initial gradient state
-  console.log(
-    "Initial gradient state:",
-    localStorage.getItem("gradient"),
-    "showGradient:",
-    showGradient,
-  );
   // Chat state
   const [showChat, setShowChat] = useState(false);
   const messages = useChatStore((s) => s.messages);
@@ -120,7 +108,6 @@ const MagicDot = () => {
   useEffect(() => {
     let unlistenExit: UnlistenFn | null = null;
     let unlistenCollapse: UnlistenFn | null = null;
-    let unlistenGradient: UnlistenFn | null = null;
 
     listen("exit_follow_mode", () => {
       setExpanded(true);
@@ -139,19 +126,10 @@ const MagicDot = () => {
       unlistenCollapse = fn;
     });
 
-    listen("gradient_changed", (event) => {
-      console.log("gradient_changed event received:", event.payload);
-      const gradient = event.payload as { gradient: boolean };
-      console.log("Setting showGradient to:", gradient.gradient);
-      setShowGradient(gradient.gradient);
-    }).then((fn) => {
-      unlistenGradient = fn;
-    });
 
     return () => {
       if (unlistenExit) unlistenExit();
       if (unlistenCollapse) unlistenCollapse();
-      if (unlistenGradient) unlistenGradient();
     };
   }, []);
 
@@ -213,9 +191,7 @@ const MagicDot = () => {
         // Collapsed notch UI: mac-style notch (flat top, rounded bottom corners)
         <div className="w-full h-full flex items-start justify-center">
           <div
-            className={`cursor-pointer select-none border border-gray-300 border-t-0 shadow-[0_2px_8px_rgba(0,0,0,0.12)] overflow-hidden ${
-              showGradient ? "" : "bg-white"
-            }`}
+            className={`cursor-pointer select-none border border-gray-300 border-t-0 shadow-[0_2px_8px_rgba(0,0,0,0.12)] overflow-hidden bg-white`}
             style={{
               width: NOTCH.w,
               height: NOTCH.h,
@@ -252,19 +228,6 @@ const MagicDot = () => {
             }}
             title="Expand"
           >
-            {showGradient && (
-              <img
-                src={gradientGif}
-                alt="gradient"
-                draggable={false}
-                className="pointer-events-none"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                onLoad={() => console.log("Gradient image loaded successfully")}
-                onError={(e) =>
-                  console.log("Gradient image failed to load:", e)
-                }
-              />
-            )}
           </div>
         </div>
       )}

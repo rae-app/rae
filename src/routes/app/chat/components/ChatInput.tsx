@@ -183,7 +183,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
       case 4:
         return "Generate or modify image...";
       default:
-        return "Enter your message or paste a screenshot";
+        return "Enter your message or paste a screensho";
     }
   };
 

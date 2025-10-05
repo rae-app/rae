@@ -23,7 +23,6 @@ import {
   Maximize2,
 } from "lucide-react";
 import notchSound from "../../../assets/sounds/bubble-pop-06-351337.mp3";
-import gradientGif from "../../../assets/gradient.gif";
 import { invoke } from "@tauri-apps/api/core";
 import { animations } from "@/constants/animations";
 import { useUserStore } from "@/store/userStore";
@@ -58,7 +57,6 @@ const NOTCH_SHADOW = `
   0 0 0 1px rgba(255, 255, 255, 0.1)
 `;
 
-const GRADIENT_OPACITY = "";
 
 // Function to play notch collapse sound with sync with notch animation
 const playNotchSound = (soundEnabled: boolean) => {
@@ -87,16 +85,14 @@ const DISABLE_SAFETY_NOTCH = { current: false };
 /**
  * Helper functions for notch styling and layout
  */
-const getNotchClasses = (isNotch: boolean, showGradient: boolean) => {
+const getNotchClasses = (isNotch: boolean) => {
   const baseClasses = "flex flex-col  min-h-0 overflow-hidden";
 
   if (!isNotch) return `${baseClasses} text-foreground`;
 
   const notchClasses =
     "w-[360px] h-24 -mt-2 border-border backdrop-blur-sm absolute  overflow-hidden";
-  const backgroundClasses = showGradient
-    ? "bg-white/80 dark:bg-black/80"
-    : "dark:bg-black bg-white";
+  const backgroundClasses = "bg-white dark:bg-black";
 
   return `${baseClasses} ${notchClasses} ${backgroundClasses}`;
 };
@@ -104,12 +100,6 @@ const getNotchClasses = (isNotch: boolean, showGradient: boolean) => {
 const getNotchStyle = (isNotch: boolean) =>
   isNotch ? { boxShadow: NOTCH_SHADOW } : {};
 
-const getGradientBackgroundStyle = (gradientGif: string) => ({
-  backgroundImage: `url(${gradientGif})`,
-  backgroundSize: "cover",
-  backgroundPosition: "center",
-  backgroundRepeat: "no-repeat",
-});
 
 const Overlay = () => {
   // State for the overlay shell itself
@@ -138,9 +128,6 @@ const Overlay = () => {
   const [inputActive, setInputActive] = useState(false);
   // const [showApp, setShowApp] = useState(false)
 
-  const [showGradient, setShowGradient] = useState<boolean>(
-    localStorage.getItem("gradient") === "true"
-  );
   // Respect preference to stop analyzing after send
   useEffect(() => {
     let unlistenFn: (() => void) | undefined;
@@ -496,15 +483,6 @@ const Overlay = () => {
         }
       }),
 
-      listen("gradient_changed", (event) => {
-        console.log(
-          "OverlayCard: gradient_changed event received:",
-          event.payload
-        );
-        const gradient = event.payload as { gradient: boolean };
-        console.log("OverlayCard: Setting showGradient to:", gradient.gradient);
-        setShowGradient(gradient.gradient);
-      }),
 
       listen("toggle_pin_state", () => {
         console.log("OverlayCard: Received toggle_pin_state event");
@@ -701,7 +679,6 @@ const Overlay = () => {
           showChat,
           isNotch,
           inputActive,
-          showGradient,
           disableNotch: DISABLE_NOTCH_ON_SHOW.current,
           timeoutActive: !!notchTimeoutRef.current,
           NOTCH_TIMEOUT,
@@ -715,7 +692,7 @@ const Overlay = () => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPinned, showChat, isNotch, inputActive, showGradient]);
+  }, [isPinned, showChat, isNotch, inputActive]);
 
   const handleMouseLeave = () => {
     // Only set timeout if conditions are met and notch not disabled
@@ -1074,7 +1051,7 @@ const Overlay = () => {
           duration: animations.overlayExpand,
           ease: "circOut",
         }}
-        className={`${getNotchClasses(isNotch, showGradient)} `}
+        className={`${getNotchClasses(isNotch)} `}
         style={getNotchStyle(isNotch)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -1082,13 +1059,6 @@ const Overlay = () => {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       >
-        {/* Gradient background overlay */}
-        {isNotch && showGradient && (
-          <div
-            className={`absolute inset-0 ${GRADIENT_OPACITY} pointer-events-none`}
-            style={getGradientBackgroundStyle(gradientGif)}
-          />
-        )}
 
         {/* Header bar */}
         <motion.div

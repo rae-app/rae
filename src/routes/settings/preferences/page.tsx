@@ -136,9 +136,6 @@ const Preferences = () => {
     initializeTheme();
   }, [initializeTheme]);
 
-  const [gradient, setGradient] = useState<boolean>(
-    localStorage.getItem("gradient") === "true",
-  );
 
   return (
     <div className="w-full h-full bg-background text-foreground  overflow-y-auto">
@@ -244,19 +241,6 @@ const Preferences = () => {
         <Card>
           <SectionHeader title="Appearance" />
           <div className="divide-y divide-border">
-            <ToggleRow
-              label="Gradient in notch"
-              enabled={gradient}
-              onToggle={async (next) => {
-                console.log("Toggling gradient to:", next);
-                localStorage.setItem("gradient", String(next));
-                console.log("Emitting gradient_changed event with:", {
-                  gradient: next,
-                });
-                emit("gradient_changed", { gradient: next });
-                setGradient(next);
-              }}
-            />
             <ToggleRow
               label="Show window info in notch"
               enabled={notchWindowDisplay}
