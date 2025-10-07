@@ -25,6 +25,7 @@ import {
   Globe,
   Brain,
   Image,
+  Plus,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -222,6 +223,17 @@ export const ChatView = ({
   // Multi-image support
   const [attachedImages, setAttachedImages] = useState<string[]>([]);
 
+  // File attachments support
+  const [attachedFiles, setAttachedFiles] = useState<
+    {
+      name: string;
+      type: string;
+      size: number;
+      content: string;
+      textContent?: string;
+    }[]
+  >([]);
+
   // Helper to get the images to preview/send, always including windowScreenshot if isActive (analysis mode)
   const getImagesToSend = () => {
     let imgs = attachedImages;
@@ -327,6 +339,7 @@ export const ChatView = ({
         modelName,
         image,
         tool,
+        files: attachedFiles,
       }),
     });
 
@@ -445,6 +458,7 @@ export const ChatView = ({
       detectedContext: insertionContext.detectedContext,
       manualImageLength: manualImage ? 1 : 0,
       attachedImagesLength: attachedImages.length,
+      attachedFilesLength: attachedFiles.length,
       windowScreenshotLength: windowScreenshot?.length || 0,
       imagesToSendLength: imagesToSend.length,
     });
@@ -454,6 +468,7 @@ export const ChatView = ({
         sender: "user" as const,
         text: userMsg, // Show original message to user
         image: imagesToSend,
+        files: attachedFiles, // Include attached files
       },
     ];
     setMessages(newMessages);
@@ -494,6 +509,7 @@ export const ChatView = ({
           provider: currentModel.label,
           modelName: currentModel.value,
           image: imagesToSend,
+          files: attachedFiles,
         });
         const updatedMessages = [
           ...newMessages,
@@ -591,9 +607,97 @@ export const ChatView = ({
     setAttachedImages((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  // Handle file selection
+  const handleFileSelect = async () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.multiple = true;
+    input.accept = "*/*"; // Allow all file types
+
+    input.onchange = (e) => {
+      const files = (e.target as HTMLInputElement).files;
+      if (files) {
+        Array.from(files).forEach((file) => {
+          // Check file size (limit to 10MB)
+          if (file.size > 10 * 1024 * 1024) {
+            alert(`File ${file.name} is too large. Maximum size is 10MB.`);
+            return;
+          }
+
+          const reader = new FileReader();
+
+          // For text files, also store the text content
+          if (
+            file.type.startsWith("text/") ||
+            file.name.toLowerCase().endsWith(".txt") ||
+            file.name.toLowerCase().endsWith(".js") ||
+            file.name.toLowerCase().endsWith(".ts") ||
+            file.name.toLowerCase().endsWith(".py") ||
+            file.name.toLowerCase().endsWith(".json") ||
+            file.name.toLowerCase().endsWith(".md") ||
+            file.name.toLowerCase().endsWith(".html") ||
+            file.name.toLowerCase().endsWith(".css") ||
+            file.name.toLowerCase().endsWith(".xml")
+          ) {
+            const textReader = new FileReader();
+            textReader.onload = (textEvent) => {
+              const textContent = textEvent.target?.result as string;
+              const base64Reader = new FileReader();
+              base64Reader.onload = (base64Event) => {
+                const base64 = base64Event.target?.result as string;
+                setAttachedFiles((prev) => {
+                  if (prev.length >= 5) return prev; // Limit to 5 files
+                  return [
+                    ...prev,
+                    {
+                      name: file.name,
+                      type: file.type,
+                      size: file.size,
+                      content: base64,
+                      textContent: textContent,
+                    },
+                  ];
+                });
+              };
+              base64Reader.readAsDataURL(file);
+            };
+            textReader.readAsText(file);
+          } else {
+            reader.onload = (event) => {
+              const base64 = event.target?.result as string;
+              setAttachedFiles((prev) => {
+                if (prev.length >= 5) return prev; // Limit to 5 files
+                return [
+                  ...prev,
+                  {
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    content: base64,
+                  },
+                ];
+              });
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      }
+    };
+
+    input.click();
+  };
+
+  // Clear attached file
+  const clearFile = (idx: number) => {
+    setAttachedFiles((prev) => prev.filter((_, i) => i !== idx));
+  };
+
   const getPlaceholderText = () => {
     if (attachedImages.length > 0) {
       return "Describe what you want to know about these images...";
+    }
+    if (attachedFiles.length > 0) {
+      return "Ask questions about the uploaded files...";
     }
 
     switch (selectedTool) {
@@ -642,6 +746,7 @@ export const ChatView = ({
         sender: "user" as const,
         text: userMsg, // Show original message to user
         image: imagesToSend,
+        files: attachedFiles, // Include attached files
       },
     ];
     setMessages(newMessages);
@@ -702,6 +807,7 @@ export const ChatView = ({
         sender: "user" as const,
         text: userMsg, // Show original message to user
         image: imagesToSend,
+        files: attachedFiles, // Include attached files
       },
     ];
     setMessages(newMessages);
@@ -756,6 +862,7 @@ export const ChatView = ({
         sender: "user" as const,
         text: userMsg,
         image: imagesToSend,
+        files: attachedFiles, // Include attached files
       },
     ];
     setMessages(newMessages);
@@ -825,6 +932,7 @@ export const ChatView = ({
       } catch (_) {}
     }
     setAttachedImages([]);
+    setAttachedFiles([]);
   };
 
   const getCurrentTime = () =>
@@ -1297,6 +1405,33 @@ export const ChatView = ({
       ))}
   </div>
 )}
+
+                  {/* Show attached files if exist */}
+                  {msg.files && msg.files.length > 0 && (
+                    <div className="mt-2 flex flex-col gap-2">
+                      <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                        Attached files:
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {msg.files.map((file: any, fileIdx: number) => (
+                          <div
+                            key={fileIdx}
+                            className="flex items-center gap-2 px-3 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700"
+                          >
+                            <div className="flex flex-col">
+                              <div className="text-sm font-medium truncate max-w-[150px]">
+                                {file.name}
+                              </div>
+                              <div className="text-xs text-zinc-500">
+                                {(file.size / 1024).toFixed(1)}KB •{" "}
+                                {file.type}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                     </div>
                   </div>
                 </div>
@@ -1454,6 +1589,42 @@ export const ChatView = ({
                       </motion.div>
                     )}
                   </AnimatePresence>
+
+                  {/* Attached Files Display */}
+                  <AnimatePresence>
+                    {attachedFiles.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 1, x: "-20px" }}
+                        animate={{ opacity: 1, scale: 1, x: "0%" }}
+                        exit={{ opacity: 0, scale: 1, x: "-20px" }}
+                        transition={{ duration: 0.3, ease: "circInOut" }}
+                        className="absolute bottom-full p-1 left-0 flex gap-2"
+                      >
+                        {attachedFiles.map((file, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => clearFile(idx)}
+                            className="relative group h-[60px] w-[120px] border-2 border-border hover:border-surface/40 group transition-colors cursor-pointer overflow-hidden rounded-sm flex items-center justify-center bg-zinc-100 dark:bg-zinc-800"
+                          >
+                            <div className="flex flex-col items-center justify-center p-2 text-xs">
+                              <div className="font-medium truncate w-full text-center">
+                                {file.name}
+                              </div>
+                              <div className="text-zinc-500 text-[10px]">
+                                {(file.size / 1024).toFixed(1)}KB
+                              </div>
+                            </div>
+                            <TrashSimpleIcon
+                              weight="bold"
+                              className="z-40 text-white group-hover:opacity-100 opacity-0 transition-all absolute"
+                            />
+                            <div className="absolute group-hover:opacity-100 opacity-0 transition-all z-30 blur-xl -bottom-1/2 left-1/2 -translate-x-1/2 rounded-full pointer-events-auto bg-surface/70 size-[60px] flex items-center justify-center"></div>
+                          </div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   <OverlayButton
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1648,6 +1819,15 @@ export const ChatView = ({
                     {/* Image attachment indicator */}
                     
                   </div>
+                </div>
+                <div className="h-full w-fit  flex items-center p-1 ">
+                  <OverlayButton
+                    onClick={handleFileSelect}
+                    className="dark:bg-zinc-950"
+                    title="Attach file"
+                  >
+                    <Plus size={16} />
+                  </OverlayButton>
                 </div>
                 <div className="h-full w-fit  flex items-center p-1 ">
                   <OverlayButton

@@ -5,6 +5,13 @@ export interface ChatMessage {
   sender: "user" | "ai";
   text: string;
   image: string[];
+  files?: {
+    name: string;
+    type: string;
+    size: number;
+    content: string;
+    textContent?: string;
+  }[];
 }
 
 export interface Conversation {

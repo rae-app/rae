@@ -16,6 +16,7 @@ export const Generate = async ({
   modelName,
   image,
   tool = 0,
+  files,
 }): Promise<any> => {
   try {
     let res;
@@ -47,6 +48,7 @@ export const Generate = async ({
         modelName,
         image: normalizedImage,
         tool,
+        files,
       });
       return res.data;
     } else {
@@ -60,6 +62,7 @@ export const Generate = async ({
         modelName,
         image: normalizedImage,
         tool,
+        files,
       });
       return res.data;
     }
@@ -91,6 +94,7 @@ export const GenerateWithWebSearch = async ({
     modelName,
     image,
     tool: 1, // web search tool
+    files: [],
   });
 };
 
@@ -113,6 +117,7 @@ export const GenerateWithSupermemory = async ({
     modelName,
     image,
     tool: 2, // supermemory tool
+    files: [],
   });
 };
 export const GenerateImage = async ({
@@ -133,6 +138,7 @@ export const GenerateImage = async ({
     modelName,
     image,
     tool: 4, // iamge generation tool
+    files: [],
   });
 };
 
