@@ -8,7 +8,7 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use serde_json::json;
 use base64::{Engine, engine::general_purpose};
 use tauri::{AppHandle, Emitter};
-use tracing::{info, warn, error, debug};
+use tracing::{info, error, debug};
 
 pub struct AudioState;
 

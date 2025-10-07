@@ -5,6 +5,7 @@ mod functions;
 mod platform;
 mod utils;
 mod audio_client;
+mod services;
 
 // Import required traits
 use audio_client::AudioState;
@@ -225,8 +226,8 @@ fn main() {
             functions::stealth::set_stealth_mode_enabled,
             functions::stealth::get_stealth_mode_enabled,
             functions::stealth::apply_stealth_mode_to_window,
-            functions::general::inject_text_to_window_by_title,
-            functions::general::inject_text_to_window_by_hwnd,
+            services::text_injection::inject_text_to_window_by_title,
+            services::text_injection::inject_text_to_window_by_hwnd,
             functions::general::capture_window_screenshot,
             functions::general::capture_window_screenshot_by_title,
             functions::general::capture_window_screenshot_by_hwnd,
