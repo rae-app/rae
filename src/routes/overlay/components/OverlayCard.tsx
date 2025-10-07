@@ -80,21 +80,32 @@ const DISABLE_SAFETY_NOTCH = { current: false };
 
 /**
  * Helper functions for notch styling and layout
+ * Designed to work like Dynamic Island - compact by default, expands on hover
  */
 const getNotchClasses = (isNotch: boolean) => {
-  const baseClasses = "flex flex-col  min-h-0 overflow-hidden";
+  const baseClasses = "flex flex-col  min-h-0 overflow-visible";
 
   if (!isNotch) return `${baseClasses} text-foreground`;
 
+  // Match Windows version exactly: 180px × 28px with 12px bottom radius
+  // Position at top-0 to sit right below Mac's physical notch (like Dynamic Island)
   const notchClasses =
-    "w-[360px] h-24 -mt-2 border-border backdrop-blur-sm absolute  overflow-hidden";
+    "w-[180px] h-[28px] border-border backdrop-blur-sm absolute overflow-visible top-0";
   const backgroundClasses = "dark:bg-black bg-white";
 
   return `${baseClasses} ${notchClasses} ${backgroundClasses}`;
 };
 
 const getNotchStyle = (isNotch: boolean) =>
-  isNotch ? { boxShadow: NOTCH_SHADOW } : {};
+  isNotch
+    ? {
+        boxShadow: NOTCH_SHADOW,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
+        borderBottomLeftRadius: 12,
+        borderBottomRightRadius: 12,
+      }
+    : {};
 
 const Overlay = () => {
   // State for the overlay shell itself
@@ -171,51 +182,62 @@ const Overlay = () => {
 
   // Save isActive state to localStorage whenever it changes
   useEffect(() => {
-    console.log("Toggle state change detected, isActive:", isActive);
+    console.log("🔄 Toggle state change detected, isActive:", isActive);
+    console.log("   Current state:", {
+      isActive,
+      windowHwnd,
+      windowName,
+      hasIcon: !!windowIcon,
+      currentScreenshotLength: windowScreenshot.length
+    });
     localStorage.setItem("overlay_active", String(isActive));
-    console.log("Overlay active state saved:", isActive);
+    console.log("💾 Overlay active state saved:", isActive);
 
     // Clear screenshot when toggle is turned off
     if (!isActive) {
-      console.log("Clearing screenshot - toggle turned off");
+      console.log("🗑️ Clearing screenshot - toggle turned off");
       console.log(
-        "Before clearing, windowScreenshot length:",
+        "   Before clearing, windowScreenshot length:",
         windowScreenshot.length,
       );
       setWindowScreenshot("");
       setShowScreenshot(false);
-      console.log("Screenshot cleared - toggle turned off");
+      console.log("✅ Screenshot cleared - toggle turned off");
     } else {
       // Capture screenshot immediately when toggle is turned on
       if (windowHwnd != null) {
         console.log(
           "🔄 Capturing screenshot immediately after toggle enabled...",
         );
-        console.log("📍 Current windowHwnd:", windowHwnd);
+        console.log("📍 Current window info:", {
+          windowHwnd,
+          windowName,
+          hasIcon: !!windowIcon
+        });
 
         invoke("capture_window_screenshot_by_hwnd", {
           hwnd: windowHwnd,
         })
-          .then((screenshot: string) => {
-            console.log(
-              "✅ Immediate screenshot captured, length:",
-              screenshot.length,
-            );
-            if (screenshot.length > 0) {
+          .then((screenshot: unknown) => {
+            const screenshotStr = screenshot as string;
+            console.log("✅ Immediate screenshot captured!");
+            console.log("   📏 Length:", screenshotStr.length);
+            if (screenshotStr.length > 0) {
               console.log(
-                "📸 Screenshot starts with:",
-                screenshot.substring(0, 50),
+                "   🔤 Starts with:",
+                screenshotStr.substring(0, 50),
               );
-              setWindowScreenshot(screenshot);
+              setWindowScreenshot(screenshotStr);
               console.log(
-                "💾 windowScreenshot state updated for chat functionality",
+                "✅ windowScreenshot state updated for chat functionality",
               );
             } else {
-              console.log("❌ Screenshot captured but empty");
+              console.log("⚠️ Screenshot captured but empty");
             }
           })
           .catch((error) => {
             console.error("❌ Failed to capture immediate screenshot:", error);
+            console.error("   Error details:", JSON.stringify(error, null, 2));
           });
       } else {
         console.log("⚠️ Cannot capture screenshot - windowHwnd is null");
@@ -941,13 +963,25 @@ const Overlay = () => {
   // Manage screenshot visibility based on hover states
   useEffect(() => {
     const isAnyHovering = isHoveringTrigger || isHoveringScreenshot;
+    console.log("👁️ Screenshot visibility effect triggered:", {
+      isHoveringTrigger,
+      isHoveringScreenshot,
+      isAnyHovering,
+      showScreenshot,
+      hasScreenshot: !!windowScreenshot,
+      screenshotLength: windowScreenshot.length,
+    });
 
     if (isAnyHovering) {
       cancelScreenshotHide();
       if (!showScreenshot && windowScreenshot) {
+        console.log("✨ Setting showScreenshot to true");
         setShowScreenshot(true);
+      } else if (!windowScreenshot) {
+        console.log("⚠️ Cannot show screenshot - windowScreenshot is empty");
       }
     } else {
+      console.log("⏱️ Scheduling screenshot hide");
       scheduleScreenshotHide();
     }
   }, [
@@ -994,25 +1028,40 @@ const Overlay = () => {
   };
 
   const handleScreenshotHover = async () => {
-    console.log("Hover triggered - capturing screenshot...");
+    console.log("🖱️ Hover triggered - capturing screenshot...");
+    console.log("📊 Current state:", {
+      isActive,
+      windowHwnd,
+      isHoveringTrigger,
+      showScreenshot,
+      windowScreenshotLength: windowScreenshot.length
+    });
     setIsHoveringTrigger(true);
 
     // Only capture screenshot if the green toggle is active
     if (!isActive) {
-      console.log("Screenshot capture skipped - green toggle is off");
+      console.log("⚠️ Screenshot capture skipped - green toggle is off");
+      return;
+    }
+
+    if (windowHwnd == null) {
+      console.log("⚠️ Screenshot capture skipped - windowHwnd is null");
       return;
     }
 
     try {
-      if (windowHwnd == null) return;
+      console.log(`📸 Calling capture_window_screenshot_by_hwnd with hwnd=${windowHwnd}`);
       const screenshot = (await invoke("capture_window_screenshot_by_hwnd", {
         hwnd: windowHwnd,
       })) as string;
-      console.log("Screenshot received, length:", screenshot.length);
-      console.log("Screenshot starts with:", screenshot.substring(0, 50));
+      console.log("✅ Screenshot received!");
+      console.log("   📏 Length:", screenshot.length);
+      console.log("   🔤 Starts with:", screenshot.substring(0, 50));
+      console.log("   ✨ Setting windowScreenshot state...");
       setWindowScreenshot(screenshot);
+      console.log("✅ windowScreenshot state updated successfully");
     } catch (error) {
-      console.error("Failed to capture screenshot:", error);
+      console.error("❌ Failed to capture screenshot:", error);
     }
   };
 
@@ -1035,14 +1084,14 @@ const Overlay = () => {
     <div
       className={`w-full h-screen  flex z-[1000000]${
         isNotch ? "items-start " : "items-center"
-      } justify-center ${isNotch ? "pt-2" : "p-2"} box-border`}
+      } justify-center ${isNotch ? "" : "p-2"} box-border`}
     >
       <motion.main
         animate={
           isNotch
             ? {
-                scale: 0.6,
-                y: -10,
+                scale: 1,
+                y: 0,
                 borderRadius: "0 0 28px 28px",
               }
             : showChat && isMaximized
@@ -1212,15 +1261,27 @@ const Overlay = () => {
                 {showScreenshot && windowScreenshot && (
                   <div
                     className="absolute top-full left-0 mt-2 z-[1000001] bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-1 animate-in fade-in-0 zoom-in-95 duration-200"
-                    onMouseEnter={handleTooltipHover}
-                    onMouseLeave={handleTooltipLeave}
+                    onMouseEnter={() => {
+                      console.log("🖱️ Mouse entered screenshot tooltip");
+                      handleTooltipHover();
+                    }}
+                    onMouseLeave={() => {
+                      console.log("🖱️ Mouse left screenshot tooltip");
+                      handleTooltipLeave();
+                    }}
                   >
                     <img
                       src={windowScreenshot}
                       alt="Window screenshot"
                       className="min-w-[250px] max-h-[350px] rounded shadow-md"
-                      onLoad={() => console.log(" Image loaded successfully")}
-                      onError={(e) => console.error("Image failed to load:", e)}
+                      onLoad={() => {
+                        console.log("✅ Screenshot image loaded successfully in tooltip");
+                        console.log("   Image src starts with:", windowScreenshot.substring(0, 80));
+                      }}
+                      onError={(e) => {
+                        console.error("❌ Screenshot image failed to load:", e);
+                        console.error("   Image src starts with:", windowScreenshot.substring(0, 80));
+                      }}
                       style={{ imageRendering: "crisp-edges" }}
                     />
                   </div>
@@ -1374,27 +1435,27 @@ const Overlay = () => {
                 stiffness: 500,
                 damping: 25,
               }}
-              className="absolute inset-0 flex items-center justify-center"
+              className="absolute inset-0 flex items-center justify-center px-2"
             >
-              <div className="flex items-center absolute left-4">
+              <div className="flex items-center absolute left-2 top-1/2 -translate-y-1/2 scale-75">
                 <RaeWatcher isActive={isActive} />
               </div>
 
-              {/* App information in notch */}
+              {/* App information in notch - compact like Windows version */}
               {windowName && notchWindowDisplayEnabled && isActive && (
-                <div className="flex items-center gap-4 ml-4 text-white/95">
+                <div className="flex items-center gap-1 text-white/95 absolute top-1/2 -translate-y-1/2 scale-75">
                   {windowIcon ? (
                     <img
                       src={windowIcon}
                       alt="App icon"
-                      className="w-8 h-8 rounded-sm"
+                      className="w-5 h-5 rounded-sm"
                     />
                   ) : (
-                    <div className="w-8 h-8 bg-white/20 rounded-sm flex items-center justify-center">
-                      <span className="text-xl text-white/60">?</span>
+                    <div className="w-5 h-5 bg-white/20 rounded-sm flex items-center justify-center">
+                      <span className="text-xs text-white/60">?</span>
                     </div>
                   )}
-                  <span className="text-xl font-bold max-w-[200px] truncate">
+                  <span className="text-xs font-medium max-w-[80px] truncate">
                     {windowName}
                   </span>
                 </div>

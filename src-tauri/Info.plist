@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSScreenCaptureUsageDescription</key>
+    <string>Rae needs screen recording permission to capture window screenshots for AI-powered assistance.</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Rae needs to control other applications to provide AI-powered assistance.</string>
+    <key>NSAccessibilityUsageDescription</key>
+    <string>Rae needs accessibility access to monitor active windows and provide context-aware AI assistance.</string>
+</dict>
+</plist>
+

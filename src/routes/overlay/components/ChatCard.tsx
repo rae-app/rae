@@ -225,14 +225,27 @@ export const ChatView = ({
   // Helper to get the images to preview/send, always including windowScreenshot if isActive (analysis mode)
   const getImagesToSend = () => {
     let imgs = attachedImages;
+    console.log("📸 getImagesToSend called:", {
+      isActive,
+      hasWindowScreenshot: !!windowScreenshot,
+      windowScreenshotLength: windowScreenshot?.length || 0,
+      attachedImagesCount: attachedImages.length
+    });
     // If analysis is on and windowScreenshot exists, ensure it's included (but not duplicated)
     if (isActive && windowScreenshot) {
       if (!imgs.includes(windowScreenshot)) {
+        console.log("✅ Adding windowScreenshot to images array");
         imgs = [windowScreenshot, ...imgs];
+      } else {
+        console.log("ℹ️ windowScreenshot already in images array");
       }
+    } else if (isActive && !windowScreenshot) {
+      console.log("⚠️ isActive is true but windowScreenshot is empty");
     }
     // Limit to 3 images
-    return imgs.slice(0, 3);
+    const result = imgs.slice(0, 3);
+    console.log(`📤 Returning ${result.length} images to send`);
+    return result;
   };
   const [stealthMode, setStealthMode] = useState<boolean>(false);
   const [lastImage, setLastImage] = useState<string>("");
@@ -240,6 +253,17 @@ export const ChatView = ({
     null,
   );
   const [imageReferenced, setImageReferenced] = useState<boolean>(false);
+  const [showScreenshotPreview, setShowScreenshotPreview] = useState<boolean>(false);
+  
+  // Debug effect to monitor screenshot preview state
+  useEffect(() => {
+    console.log("🔍 Screenshot Preview State Changed:", {
+      showScreenshotPreview,
+      hasWindowScreenshot: !!windowScreenshot,
+      windowScreenshotLength: windowScreenshot?.length,
+      hasCurrResponse: !!(currResponse && currResponse.trim())
+    });
+  }, [showScreenshotPreview, windowScreenshot, currResponse]);
   // Refs for scrolling
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
@@ -981,7 +1005,7 @@ export const ChatView = ({
                 </div>
                 
                 {/* Insert button */}
-                <div className="flex items-center gap-2 ml-2">
+                <div className="flex items-center gap-2 ml-2 relative no-drag">
                   <AnimatePresence>
                     {currResponse && currResponse.trim() && (
                       <motion.button
@@ -993,7 +1017,20 @@ export const ChatView = ({
                           ease: [0.25, 0.46, 0.45, 0.94],
                         }}
                         onClick={handleInject}
-                        className="shrink-0 bg-white/20 hover:bg-white/30 dark:bg-white/10 dark:hover:bg-white/15 backdrop-blur-sm border border-white/40 dark:border-white/20 text-foreground px-2 py-1 rounded-md shadow-sm hover:shadow-md flex items-center gap-1 transition-all duration-200"
+                        onMouseEnter={() => {
+                          console.log("Mouse entered Insert button");
+                          console.log("windowScreenshot exists:", !!windowScreenshot);
+                          console.log("windowScreenshot length:", windowScreenshot?.length);
+                          console.log("showScreenshotPreview will be set to:", true);
+                          setShowScreenshotPreview(true);
+                        }}
+                        onMouseLeave={() => {
+                          console.log("Mouse left Insert button");
+                          setShowScreenshotPreview(false);
+                        }}
+                        draggable={false}
+                        onDragStart={(e) => e.preventDefault()}
+                        className="no-drag shrink-0 bg-white/20 hover:bg-white/30 dark:bg-white/10 dark:hover:bg-white/15 backdrop-blur-sm border border-white/40 dark:border-white/20 text-foreground px-2 py-1 rounded-md shadow-sm hover:shadow-md flex items-center gap-1 transition-all duration-200 relative cursor-pointer"
                         title={`Insert text into ${
                           windowName || "active window"
                         }`}
@@ -1002,19 +1039,42 @@ export const ChatView = ({
                           <img
                             src={windowIcon}
                             alt="App icon"
-                            className="w-4 h-4 rounded-sm flex-shrink-0"
+                            className="w-4 h-4 rounded-sm flex-shrink-0 pointer-events-none"
+                            draggable={false}
                           />
                         ) : (
-                          <div className="w-4 h-4 bg-gray-300 rounded-sm flex-shrink-0 flex items-center justify-center text-xs">
+                          <div className="w-4 h-4 bg-gray-300 rounded-sm flex-shrink-0 flex items-center justify-center text-xs pointer-events-none">
                             ?
                           </div>
                         )}
-                        <span className="text-xs font-medium whitespace-nowrap">
+                        <span className="text-xs font-medium whitespace-nowrap pointer-events-none">
                           Insert
                         </span>
                       </motion.button>
                     )}
                   </AnimatePresence>
+                  
+                  {/* Screenshot Preview on Hover */}
+                  {showScreenshotPreview && windowScreenshot && currResponse && currResponse.trim() ? (
+                    <div
+                      className="fixed top-20 right-20 z-[9999] pointer-events-none bg-red-500 p-4"
+                      style={{ zIndex: 99999 }}
+                    >
+                      <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-2xl border-2 border-red-500 overflow-hidden">
+                        <div className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700">
+                          <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                            {windowName || "Window Preview"} - DEBUG MODE
+                          </p>
+                        </div>
+                        <img
+                          src={windowScreenshot}
+                          alt="Window screenshot"
+                          className="max-w-[300px] max-h-[200px] object-contain"
+                          draggable={false}
+                        />
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
                 
                 {/* Time and controls section */}

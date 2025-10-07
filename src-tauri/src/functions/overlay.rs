@@ -332,9 +332,9 @@ pub fn toggle_magic_dot(app: AppHandle) {
 
 /// Continuously records and prints the mouse position in a background thread.
 
-// Notch area constants (customize as needed)
-const NOTCH_WIDTH: i32 = 200; // Width of notch
-const NOTCH_HEIGHT: i32 = 36; // Height of notch
+// Notch area constants - match Windows version (180x28)
+const NOTCH_WIDTH: i32 = 180; // Width of notch
+const NOTCH_HEIGHT: i32 = 28; // Height of notch
 
 pub struct NotchWatcher;
 impl NotchWatcher {

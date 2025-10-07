@@ -113,52 +113,6 @@ fn ensure_clipboard_watcher_started(app: AppHandle) {
                     last_text = current.clone();
                 }
             }
-
-            #[cfg(target_os = "macos")]
-            #[cfg(target_os = "windows")]
-            fn ensure_selection_watcher_started(app: AppHandle) {
-                if CLIPBOARD_WATCHER_RUNNING.swap(true, Ordering::Relaxed) {
-                    return;
-                }
-                std::thread::spawn(move || {
-                    use cocoa::appkit::NSPasteboard;
-                    use cocoa::base::{id, nil};
-                    use cocoa::foundation::NSAutoreleasePool;
-                    use objc::{class, msg_send};
-
-                    let mut last_change_count: i64 = -1;
-                    let mut last_text: Option<String> = None;
-
-                    loop {
-                        if !CLIPBOARD_WATCHER_RUNNING.load(Ordering::Relaxed) {
-                            break;
-                        }
-
-                        unsafe {
-                            let pool = NSAutoreleasePool::new(nil);
-                            let pasteboard: id = msg_send![class!(NSPasteboard), generalPasteboard];
-                            let change_count: i64 = msg_send![pasteboard, changeCount];
-
-                            if change_count != last_change_count {
-                                last_change_count = change_count;
-
-                                if let Some(current_text) = read_clipboard_unicode_text() {
-                                    if last_text.as_ref() != Some(&current_text) {
-                                        last_text = Some(current_text.clone());
-
-                                        if AUTO_SHOW_ON_COPY.load(Ordering::Relaxed) {
-                                            let _ = app.emit("clipboard_changed", current_text);
-                                        }
-                                    }
-                                }
-                            }
-                            let _: () = msg_send![pool, drain];
-                        }
-
-                        std::thread::sleep(std::time::Duration::from_millis(100));
-                    }
-                });
-            }
             std::thread::sleep(std::time::Duration::from_millis(250));
         }
     });
