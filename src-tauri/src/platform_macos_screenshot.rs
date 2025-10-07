@@ -18,8 +18,6 @@ pub type WindowId = u32;
 /// Captures a screenshot of a specific window by its ID using native Core Graphics API
 /// This is the macOS equivalent of Windows' `PrintWindow` function
 pub fn capture_window_by_id_native(window_id: WindowId) -> Result<String, String> {
-    println!("[macOS Screenshot] 📸 Attempting to capture window ID: {}", window_id);
-    
     unsafe {
         // Use CGWindowListCreateImage - the native macOS API for capturing windows
         // This is similar to Windows' PrintWindow API
@@ -28,8 +26,7 @@ pub fn capture_window_by_id_native(window_id: WindowId) -> Result<String, String
             &CGPoint::new(0.0, 0.0),
             &CGSize::new(0.0, 0.0),
         );
-        
-        println!("[macOS Screenshot] 🔧 Calling CGWindowListCreateImage with window_id={}", window_id);
+
         // Try with BoundsIgnoreFraming and NominalResolution for better capture
         let image_options = kCGWindowImageBoundsIgnoreFraming | kCGWindowImageNominalResolution;
         let mut image_ref = CGWindowListCreateImage(
@@ -55,16 +52,11 @@ pub fn capture_window_by_id_native(window_id: WindowId) -> Result<String, String
                 eprintln!("[macOS Screenshot] ❌ Fallback also failed - window may require Screen Recording permission");
                 return Err(format!("Failed to capture window {} - please grant Screen Recording permission in System Settings > Privacy & Security > Screen Recording", window_id));
             }
-            
-            println!("[macOS Screenshot] ✅ Fallback succeeded with default options");
         }
-        
-        println!("[macOS Screenshot] ✅ CGWindowListCreateImage succeeded, image_ref is valid");
-        
+
         // Convert CGImage to PNG using Cocoa's NSBitmapImageRep
         let pool = NSAutoreleasePool::new(nil);
-        
-        println!("[macOS Screenshot] 🔄 Converting CGImage to NSImage...");
+
         // Create NSImage from CGImage
         // Let NSImage auto-size from the CGImage
         let ns_image: id = msg_send![class!(NSImage), alloc];
@@ -76,9 +68,7 @@ pub fn capture_window_by_id_native(window_id: WindowId) -> Result<String, String
             eprintln!("[macOS Screenshot] ❌ Failed to create NSImage from CGImage");
             return Err("Failed to create NSImage".to_string());
         }
-        
-        println!("[macOS Screenshot] ✅ NSImage created successfully");
-        
+
         // Get TIFF representation
         let tiff_rep: id = msg_send![ns_image, TIFFRepresentation];
         if tiff_rep == nil {
@@ -116,11 +106,7 @@ pub fn capture_window_by_id_native(window_id: WindowId) -> Result<String, String
         
         let data_slice = std::slice::from_raw_parts(bytes, length);
         let base64_string = general_purpose::STANDARD.encode(data_slice);
-        
-        println!("[macOS Screenshot] ✅ Screenshot captured successfully!");
-        println!("   📏 PNG size: {} bytes", length);
-        println!("   📦 Base64 length: {} chars", base64_string.len());
-        
+
         // Cleanup
         let _: () = msg_send![pool, drain];
         core_foundation::base::CFRelease(image_ref as *const _);

@@ -341,13 +341,11 @@ impl NotchWatcher {
     pub fn start(window: tauri::WebviewWindow, app: tauri::AppHandle) {
         // Check if a NotchWatcher is already running
         if NOTCH_WATCHER_RUNNING.load(Ordering::SeqCst) {
-            println!("⚠️ NotchWatcher already running, not starting another");
             return;
         }
 
         // Set the flag to indicate NotchWatcher is starting
         NOTCH_WATCHER_RUNNING.store(true, Ordering::SeqCst);
-        println!("✅ Starting NotchWatcher thread");
         std::thread::spawn(move || {
             let enigo = Enigo::new();
 

@@ -8,6 +8,7 @@ import {
   Image,
   X,
   Wrench,
+  Plus,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { AnimatePresence, motion } from "motion/react";
@@ -81,6 +82,15 @@ const Chat: React.FC<ChatProps> = ({
   const [expanded, setExpanded] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [attachedImages, setAttachedImages] = useState<string[]>([]);
+  const [attachedFiles, setAttachedFiles] = useState<
+    {
+      name: string;
+      type: string;
+      size: number;
+      content: string;
+      textContent?: string;
+    }[]
+  >([]);
   const [init, setInit] = useState(initial);
   const [toolsDropdownOpen, setToolsDropdownOpen] = useState(false);
   const toolsDropdownRef = useRef<HTMLDivElement>(null);
@@ -145,6 +155,7 @@ const Chat: React.FC<ChatProps> = ({
     setMessage("");
     setIsTyping(false);
     setAttachedImages([]);
+    setAttachedFiles([]);
     if (chatInputRef.current) {
       chatInputRef.current.value = "";
       //   autosize.update(chatInputRef.current);
@@ -157,6 +168,7 @@ const Chat: React.FC<ChatProps> = ({
     setMessage("");
     setIsTyping(false);
     setAttachedImages([]);
+    setAttachedFiles([]);
     if (chatInputRef.current) {
       chatInputRef.current.value = "";
       autosize.update(chatInputRef.current);
@@ -170,6 +182,7 @@ const Chat: React.FC<ChatProps> = ({
     setMessage("");
     setIsTyping(false);
     setAttachedImages([]);
+    setAttachedFiles([]);
     if (chatInputRef.current) {
       chatInputRef.current.value = "";
       //   autosize.update(chatInputRef.current);
@@ -184,6 +197,7 @@ const Chat: React.FC<ChatProps> = ({
     setMessage("");
     setIsTyping(false);
     setAttachedImages([]);
+    setAttachedFiles([]);
     if (chatInputRef.current) {
       chatInputRef.current.value = "";
       //   autosize.update(chatInputRef.current);
@@ -216,6 +230,9 @@ const Chat: React.FC<ChatProps> = ({
   const getPlaceholderText = () => {
     if (attachedImages.length > 0) {
       return "Describe what you want to know about these images...";
+    }
+    if (attachedFiles.length > 0) {
+      return "Ask questions about the uploaded files...";
     }
     switch (selectedTool) {
       case 1:
@@ -287,6 +304,91 @@ const Chat: React.FC<ChatProps> = ({
     } else {
       setAttachedImages([]);
     }
+  };
+
+  // Handle file selection
+  const handleFileSelect = async () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.multiple = true;
+    input.accept = "*/*"; // Allow all file types
+
+    input.onchange = (e) => {
+      const files = (e.target as HTMLInputElement).files;
+      if (files) {
+        Array.from(files).forEach((file) => {
+          // Check file size (limit to 10MB)
+          if (file.size > 10 * 1024 * 1024) {
+            alert(`File ${file.name} is too large. Maximum size is 10MB.`);
+            return;
+          }
+
+          const reader = new FileReader();
+
+          // For text files, also store the text content
+          if (
+            file.type.startsWith("text/") ||
+            file.name.toLowerCase().endsWith(".txt") ||
+            file.name.toLowerCase().endsWith(".js") ||
+            file.name.toLowerCase().endsWith(".ts") ||
+            file.name.toLowerCase().endsWith(".py") ||
+            file.name.toLowerCase().endsWith(".json") ||
+            file.name.toLowerCase().endsWith(".md") ||
+            file.name.toLowerCase().endsWith(".html") ||
+            file.name.toLowerCase().endsWith(".css") ||
+            file.name.toLowerCase().endsWith(".xml")
+          ) {
+            const textReader = new FileReader();
+            textReader.onload = (textEvent) => {
+              const textContent = textEvent.target?.result as string;
+              const base64Reader = new FileReader();
+              base64Reader.onload = (base64Event) => {
+                const base64 = base64Event.target?.result as string;
+                setAttachedFiles((prev) => {
+                  if (prev.length >= 5) return prev; // Limit to 5 files
+                  return [
+                    ...prev,
+                    {
+                      name: file.name,
+                      type: file.type,
+                      size: file.size,
+                      content: base64,
+                      textContent: textContent,
+                    },
+                  ];
+                });
+              };
+              base64Reader.readAsDataURL(file);
+            };
+            textReader.readAsText(file);
+          } else {
+            reader.onload = (event) => {
+              const base64 = event.target?.result as string;
+              setAttachedFiles((prev) => {
+                if (prev.length >= 5) return prev; // Limit to 5 files
+                return [
+                  ...prev,
+                  {
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    content: base64,
+                  },
+                ];
+              });
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      }
+    };
+
+    input.click();
+  };
+
+  // Clear attached file
+  const clearFile = (idx: number) => {
+    setAttachedFiles((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const handleInputChange = (value: string) => {
@@ -389,6 +491,40 @@ const Chat: React.FC<ChatProps> = ({
                                 >
                                   ×
                                 </button>
+                              </div>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Attached Files Display */}
+                      <AnimatePresence>
+                        {attachedFiles.length > 0 && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 1, y: -10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 1, y: -10 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute bottom-full left-2 mb-2 flex gap-2"
+                          >
+                            {attachedFiles.map((file, idx) => (
+                              <div
+                                key={idx}
+                                onClick={() => clearFile(idx)}
+                                className="relative group h-[50px] w-[100px] border border-border hover:border-red-500/40 transition-colors cursor-pointer overflow-hidden rounded flex items-center justify-center bg-card"
+                              >
+                                <div className="flex flex-col items-center justify-center p-1 text-[10px]">
+                                  <div className="font-medium truncate w-full text-center">
+                                    {file.name}
+                                  </div>
+                                  <div className="text-foreground/50">
+                                    {(file.size / 1024).toFixed(1)}KB
+                                  </div>
+                                </div>
+                                <X
+                                  size={14}
+                                  className="absolute top-1 right-1 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                />
                               </div>
                             ))}
                           </motion.div>
@@ -560,10 +696,19 @@ const Chat: React.FC<ChatProps> = ({
                       </button>
                     </div>
 
+                    {/* File Upload Button */}
+                    <button
+                      onClick={handleFileSelect}
+                      className="h-full px-3 ml-auto mr-2 border border-border rounded-lg hover:bg-foreground/5 transition-colors duration-100 flex items-center justify-center text-sm font-medium text-foreground/70"
+                      title="Attach file"
+                    >
+                      <Plus size={16} />
+                    </button>
+
                     <motion.div
                       initial={{}}
                       whileTap={{ scale: disabled ? 1 : 0.9 }}
-                      className={`h-full ml-auto aspect-square  shrink-0 ${
+                      className={`h-full aspect-square  shrink-0 ${
                         disabled ? "saturate-0 pointer-events-none" : ""
                       } flex items-center justify-center `}
                     >
@@ -641,6 +786,40 @@ const Chat: React.FC<ChatProps> = ({
                             >
                               ×
                             </button>
+                          </div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Attached Files Display */}
+                  <AnimatePresence>
+                    {attachedFiles.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 1, y: -10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 1, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute bottom-full left-2 mb-2 flex gap-2"
+                      >
+                        {attachedFiles.map((file, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => clearFile(idx)}
+                            className="relative group h-[50px] w-[100px] border border-border hover:border-red-500/40 transition-colors cursor-pointer overflow-hidden rounded flex items-center justify-center bg-card"
+                          >
+                            <div className="flex flex-col items-center justify-center p-1 text-[10px]">
+                              <div className="font-medium truncate w-full text-center">
+                                {file.name}
+                              </div>
+                              <div className="text-foreground/50">
+                                {(file.size / 1024).toFixed(1)}KB
+                              </div>
+                            </div>
+                            <X
+                              size={14}
+                              className="absolute top-1 right-1 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                            />
                           </div>
                         ))}
                       </motion.div>
@@ -785,10 +964,19 @@ const Chat: React.FC<ChatProps> = ({
                     </button>
                   </div>
 
+                  {/* File Upload Button */}
+                  <button
+                    onClick={handleFileSelect}
+                    className="h-full px-3 ml-auto mr-2 border border-border rounded-lg hover:bg-foreground/5 transition-colors duration-100 flex items-center justify-center text-sm font-medium text-foreground/70"
+                    title="Attach file"
+                  >
+                    <Plus size={16} />
+                  </button>
+
                   <motion.div
                     initial={{}}
                     whileTap={{ scale: disabled ? 1 : 0.9 }}
-                    className={`h-full ml-auto aspect-square  shrink-0 ${
+                    className={`h-full aspect-square  shrink-0 ${
                       disabled ? "saturate-0 pointer-events-none" : ""
                     } flex items-center justify-center `}
                   >

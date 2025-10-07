@@ -333,13 +333,12 @@ pub fn get_packaged_app_icon_from_window_id(window_id: WindowId) -> Option<Strin
 
 /// Captures a screenshot of a specific window by window ID
 pub fn capture_window_screenshot_by_id(window_id: WindowId) -> Result<String, String> {
-    println!("[macOS] 📸 capture_window_screenshot_by_id called with window_id={}", window_id);
     // Use native Core Graphics API for screenshot capture (like Windows' PrintWindow)
     // This is more reliable than xcap and doesn't have window ID matching issues
     let result = platform_macos_screenshot::capture_window_by_id_native(window_id);
     match &result {
-        Ok(data) => println!("[macOS] ✅ Screenshot capture succeeded, data length: {}", data.len()),
-        Err(e) => eprintln!("[macOS] ❌ Screenshot capture failed: {}", e),
+        Ok(_) => {},
+        Err(e) => eprintln!("Screenshot capture failed: {}", e),
     }
     result
 }

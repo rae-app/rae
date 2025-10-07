@@ -3,8 +3,6 @@ use tauri::{AppHandle, LogicalPosition, Manager, Position, Runtime};
 #[tauri::command]
 pub fn show_app(app: AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
-        println!("show app");
-
         let _ = window.show();
         let _ = window.set_focus();
         let _ = window.set_ignore_cursor_events(false);
@@ -14,7 +12,6 @@ pub fn show_app(app: AppHandle) {
 #[tauri::command]
 pub  fn hide_app(app: AppHandle) {
     if let Some(window) = app.get_webview_window("main"){
-        println!("hide app");
         let _ = window.set_ignore_cursor_events(true);
     }
 }
@@ -23,7 +20,6 @@ pub  fn hide_app(app: AppHandle) {
 #[tauri::command]
 pub fn start_following_overlay(app: AppHandle) {
     // Get the overlay window
-    println!("start following overlay");
     if let Some(overlay) = app.get_webview_window("overlay") {
         if let Ok(position) = overlay.outer_position() {
             // Calculate new position
