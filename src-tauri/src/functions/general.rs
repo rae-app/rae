@@ -38,15 +38,11 @@ use cocoa::appkit::NSPasteboard;
 #[cfg(target_os = "macos")]
 use cocoa::base::{id, nil};
 #[cfg(target_os = "macos")]
-use cocoa::foundation::{NSAutoreleasePool, NSString};
-#[cfg(target_os = "macos")]
 use core_graphics::event::{CGEvent, CGEventTapLocation, CGEventType, CGKeyCode};
 #[cfg(target_os = "macos")]
 use core_graphics::event_source::{CGEventSource, CGEventSourceStateID};
 #[cfg(target_os = "macos")]
 use objc::{class, msg_send, sel, sel_impl};
-#[cfg(target_os = "macos")]
-use objc_foundation::INSString;
 
 use std::ffi::OsStr;
 
@@ -69,9 +65,6 @@ pub fn start_window_watch(app: AppHandle) {
 
             #[cfg(target_os = "windows")]
             let is_valid = !current_hwnd.is_null();
-
-            #[cfg(target_os = "macos")]
-            let is_valid = current_hwnd.is_some();
 
             #[cfg(target_os = "windows")]
             let hwnd_opt = if is_valid { Some(current_hwnd) } else { None };
@@ -145,7 +138,8 @@ pub fn inject_text_to_window_by_title(text: String, window_title: String) -> Res
 
     #[cfg(target_os = "macos")]
     {
-        // On macOS, find window by title
+        #[allow(unused_variables)]
+        // On macOS, find window by title - not yet fully implemented
         use crate::platform::platform_impl::*;
         use core_foundation::array::{CFArray, CFArrayRef};
         use core_foundation::base::TCFType;
@@ -318,24 +312,62 @@ fn inject_text_via_clipboard(text: String, hwnd: WindowHandle) -> Result<(), Str
 }
 
 #[cfg(target_os = "macos")]
-fn inject_text_via_clipboard(text: String, _window_id: WindowHandle) -> Result<(), String> {
+fn inject_text_via_clipboard(text: String, window_id: WindowHandle) -> Result<(), String> {
     use cocoa::appkit::NSPasteboard;
     use cocoa::base::{id, nil};
-    use cocoa::foundation::{NSAutoreleasePool, NSString};
+    use cocoa::foundation::{NSArray, NSAutoreleasePool, NSString};
     use core_graphics::event::{CGEvent, CGEventTapLocation};
     use core_graphics::event_source::{CGEventSource, CGEventSourceStateID};
     use objc::{class, msg_send, sel, sel_impl};
-    use objc_foundation::INSString;
 
     println!(
-        "🔄 Starting clipboard injection for {} characters",
-        text.len()
+        "🔄 [macOS Inject] Starting clipboard injection for {} characters to window {}",
+        text.len(),
+        window_id
     );
 
     unsafe {
         let pool = NSAutoreleasePool::new(nil);
+        
+        // CRITICAL: Activate the target window first (like SetForegroundWindow on Windows)
+        println!("🎯 [macOS Inject] Step 1: Activating target window {}", window_id);
+        
+        // Get the PID of the target window
+        if let Some(pid) = crate::platform::platform_impl::get_pid_from_window_id(window_id) {
+            println!("   Found PID: {}", pid);
+            
+            // Get the NSRunningApplication for this PID
+            let workspace: id = msg_send![class!(NSWorkspace), sharedWorkspace];
+            let running_apps: id = msg_send![workspace, runningApplications];
+            let count: usize = msg_send![running_apps, count];
+            
+            println!("   Searching through {} running apps", count);
+            
+            for i in 0..count {
+                let app: id = msg_send![running_apps, objectAtIndex: i];
+                let app_pid: i32 = msg_send![app, processIdentifier];
+                
+                if app_pid == pid {
+                    println!("   ✅ Found matching app, activating...");
+                    // Activate the application
+                    let success: bool = msg_send![app, activateWithOptions: 0]; // NSApplicationActivateIgnoringOtherApps
+                    if !success {
+                        eprintln!("   ⚠️ Failed to activate app");
+                    } else {
+                        println!("   ✅ App activated successfully");
+                    }
+                    break;
+                }
+            }
+            
+            // Wait for activation to complete
+            std::thread::sleep(std::time::Duration::from_millis(200));
+        } else {
+            eprintln!("   ⚠️ Could not get PID for window {}", window_id);
+        }
 
         // Get general pasteboard
+        println!("📋 [macOS Inject] Step 2: Writing to clipboard");
         let pasteboard: id = msg_send![class!(NSPasteboard), generalPasteboard];
 
         // Clear pasteboard
@@ -353,8 +385,13 @@ fn inject_text_via_clipboard(text: String, _window_id: WindowHandle) -> Result<(
             return Err("Failed to write to clipboard".to_string());
         }
 
-        println!("✅ Clipboard injection completed successfully");
+        println!("   ✅ Text written to clipboard");
+        
+        // Wait a bit to ensure clipboard is ready
+        std::thread::sleep(std::time::Duration::from_millis(50));
+        
         // Simulate Command+V
+        println!("⌨️  [macOS Inject] Step 3: Sending Command+V keypress");
         let source = match CGEventSource::new(CGEventSourceStateID::CombinedSessionState) {
             Ok(s) => s,
             Err(_) => {
@@ -372,8 +409,9 @@ fn inject_text_via_clipboard(text: String, _window_id: WindowHandle) -> Result<(
             }
         };
         cmd_down.post(CGEventTapLocation::HID);
+        println!("   ⌘ Command key pressed");
 
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        std::thread::sleep(std::time::Duration::from_millis(50));
 
         // V key down (0x09)
         let v_down = match CGEvent::new_keyboard_event(source.clone(), 0x09, true) {
@@ -385,8 +423,9 @@ fn inject_text_via_clipboard(text: String, _window_id: WindowHandle) -> Result<(
         };
         v_down.set_flags(core_graphics::event::CGEventFlags::CGEventFlagCommand);
         v_down.post(CGEventTapLocation::HID);
+        println!("   V V key pressed");
 
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        std::thread::sleep(std::time::Duration::from_millis(50));
 
         // V key up
         let v_up = match CGEvent::new_keyboard_event(source.clone(), 0x09, false) {
@@ -398,8 +437,9 @@ fn inject_text_via_clipboard(text: String, _window_id: WindowHandle) -> Result<(
         };
         v_up.set_flags(core_graphics::event::CGEventFlags::CGEventFlagCommand);
         v_up.post(CGEventTapLocation::HID);
+        println!("   ↑ V key released");
 
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        std::thread::sleep(std::time::Duration::from_millis(50));
 
         // Command key up
         let cmd_up = match CGEvent::new_keyboard_event(source, 0x37, false) {
@@ -410,8 +450,10 @@ fn inject_text_via_clipboard(text: String, _window_id: WindowHandle) -> Result<(
             }
         };
         cmd_up.post(CGEventTapLocation::HID);
+        println!("   ↑ Command key released");
 
         let _: () = msg_send![pool, drain];
+        println!("✅ [macOS Inject] Text injection completed successfully!");
         Ok(())
     }
 }
