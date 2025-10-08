@@ -813,12 +813,18 @@ const Overlay = () => {
   };
 
   const handlePinClick = async () => {
+    console.log("📌 handlePinClick called - Current state:", {
+      isPinned,
+      isNotch,
+      showChat,
+    });
+    
     const newPinned = !isPinned;
     const window = getCurrentWebviewWindow();
 
     if (newPinned) {
       // Pinning the overlay
-      console.log("Pinning overlay bar...");
+      console.log("📍 Pinning overlay bar...");
       // Reset both disable flags when user manually pins
       DISABLE_PIN_ON_SHOW.current = false;
       DISABLE_NOTCH_ON_SHOW.current = false;
@@ -833,10 +839,10 @@ const Overlay = () => {
       const currentSize = await window.outerSize();
       await resize(currentSize.width, currentSize.height, true);
 
-      console.log("Overlay pinned and centered at top");
+      console.log("✅ Overlay pinned and centered at top");
     } else {
       // Unpinning the overlay
-      console.log("Unpinning overlay bar...");
+      console.log("📍 Unpinning overlay bar...");
       
       // Reset notch state
       setIsNotch(false);
@@ -847,10 +853,11 @@ const Overlay = () => {
 
       // Reset window state - remove always-on-top
       await window.setAlwaysOnTop(false);
-      console.log("Overlay unpinned - removed always-on-top");
+      console.log("✅ Overlay unpinned - removed always-on-top");
     }
 
     setIsPinned(newPinned);
+    console.log("✅ Pin state updated to:", newPinned);
   };
 
   // Handle image paste

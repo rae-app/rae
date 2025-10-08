@@ -42,7 +42,7 @@ import { Provider } from "jotai";
 
 function App() {
   const { darkTheme, initializeTheme } = useDarkThemeStore();
-  // Register a global keyboard shortcut (Ctrl+H) to toggle the magic dot.
+  // Register a global keyboard shortcut (Cmd+H on macOS, Ctrl+H on Windows/Linux) to toggle the magic dot.
   // We use a small debounce to avoid rapid double-toggles when keys repeat.
   // Initialize darkTheme from localStorage on mount
   useEffect(() => {
@@ -93,7 +93,7 @@ function App() {
     };
   }, []);
 
-  // Register Ctrl+M shortcut to show overlay in center
+  // Register CommandOrControl+M shortcut to show overlay in center (Cmd+M on macOS, Ctrl+M on Windows/Linux)
   useEffect(() => {
     const combo = SHOW_OVERLAY_CENTER_COMBO;
     const cooldownMs = SHOW_OVERLAY_CENTER_COOLDOWN_MS;
@@ -137,9 +137,9 @@ function App() {
     };
   }, []);
 
-  // Register Ctrl+M shortcut to center overlay bar
+  // Register CommandOrControl+M shortcut to center overlay bar (Cmd+M on macOS, Ctrl+M on Windows/Linux)
   useEffect(() => {
-    const combo = "Ctrl+M";
+    const combo = "CommandOrControl+M";
     const cooldownMs = 300;
     let lastFired = 0;
 
@@ -155,23 +155,24 @@ function App() {
             console.warn("isRegistered/unregister failed; continuing", e);
           }
           await register(combo, async () => {
-            console.log("Global shortcut pressed:", combo);
+            console.log("Global shortcut pressed (center overlay):", combo);
             const now = Date.now();
             if (now - lastFired < cooldownMs) {
+              console.log("Cooldown active, skipping");
               return;
             }
             lastFired = now;
             try {
               await invoke("center_overlay_bar");
-              console.log("Invoked center_overlay_bar");
+              console.log("✅ Invoked center_overlay_bar successfully");
             } catch (e) {
-              console.error("Failed to center overlay bar", e);
+              console.error("❌ Failed to center overlay bar", e);
             }
           });
           const ok = await isRegistered(combo);
-          console.log("Registered global shortcut:", combo, ok);
+          console.log("✅ Registered global shortcut for center overlay:", combo, ok);
         } catch (e) {
-          console.error("Failed to register global shortcut", e);
+          console.error("❌ Failed to register global shortcut for center overlay", e);
         }
       };
       await setup();
@@ -183,9 +184,9 @@ function App() {
     };
   }, []);
 
-  // Register Ctrl+P shortcut to toggle pin state
+  // Register CommandOrControl+P shortcut to toggle pin state (Cmd+P on macOS, Ctrl+P on Windows/Linux)
   useEffect(() => {
-    const combo = "Ctrl+P";
+    const combo = "CommandOrControl+P";
     const cooldownMs = 300;
     let lastFired = 0;
 
@@ -201,23 +202,24 @@ function App() {
             console.warn("isRegistered/unregister failed; continuing", e);
           }
           await register(combo, async () => {
-            console.log("Global shortcut pressed:", combo);
+            console.log("Global shortcut pressed (toggle pin):", combo);
             const now = Date.now();
             if (now - lastFired < cooldownMs) {
+              console.log("Cooldown active, skipping");
               return;
             }
             lastFired = now;
             try {
               await invoke("toggle_pin_overlay");
-              console.log("Invoked toggle_pin_overlay");
+              console.log("✅ Invoked toggle_pin_overlay successfully");
             } catch (e) {
-              console.error("Failed to toggle pin overlay", e);
+              console.error("❌ Failed to toggle pin overlay", e);
             }
           });
           const ok = await isRegistered(combo);
-          console.log("Registered global shortcut:", combo, ok);
+          console.log("✅ Registered global shortcut for pin toggle:", combo, ok);
         } catch (e) {
-          console.error("Failed to register global shortcut", e);
+          console.error("❌ Failed to register global shortcut for pin toggle", e);
         }
       };
       await setup();

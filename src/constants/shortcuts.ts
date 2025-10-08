@@ -1,13 +1,13 @@
 {
   /* Shortcuts for Magic Dot */
 }
-export const MAGIC_DOT_TOGGLE_COMBO = "Ctrl+H";
+export const MAGIC_DOT_TOGGLE_COMBO = "CommandOrControl+H";
 export const MAGIC_DOT_TOGGLE_COOLDOWN_MS = 300;
 
 {
   /* Shortcuts for showing overlay in center */
 }
-export const SHOW_OVERLAY_CENTER_COMBO = "Ctrl+M";
+export const SHOW_OVERLAY_CENTER_COMBO = "CommandOrControl+M";
 export const SHOW_OVERLAY_CENTER_COOLDOWN_MS = 300;
 
 {
@@ -22,17 +22,17 @@ interface Shortcut {
 
 export const shortcuts: Shortcut[] = [
   {
-    combo: ["Ctrl", "H"],
+    combo: ["Cmd", "H"],
     title: "Toggle overlay visibility",
     description: "Show or hide the overlay window",
   },
   {
-    combo: ["Ctrl", "M"],
+    combo: ["Cmd", "M"],
     title: "Center overlay bar",
     description: "Move overlay bar to center of screen",
   },
   {
-    combo: ["Ctrl", "P"],
+    combo: ["Cmd", "P"],
     title: "Toggle pin mode",
     description: "Pin or unpin the overlay bar",
   },
