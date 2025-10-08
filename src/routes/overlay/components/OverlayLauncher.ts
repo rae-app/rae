@@ -3,6 +3,10 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { Effect } from "@tauri-apps/api/window";
+
+// Guard flag to prevent concurrent window creation (fixes StrictMode double-render issue)
+let isCreatingOverlay = false;
+
 // Creates (or reuses) the magic dot window and ensures it is visible and focused.
 // Emits `collapse_to_dot` so the UI starts in the small dot state.
 export const LaunchOverlayWindow = async () => {
@@ -13,6 +17,7 @@ export const LaunchOverlayWindow = async () => {
     // If window already exists, just resize and focus it
     const existing = await WebviewWindow.getByLabel("overlay");
     if (existing) {
+      console.log("Overlay window already exists, reusing it");
       try {
         await existing.setSize(new LogicalSize(WIDTH, HEIGHT));
       } catch (_) {}
@@ -26,6 +31,19 @@ export const LaunchOverlayWindow = async () => {
       } catch (_) {}
       return existing;
     }
+
+    // Prevent concurrent creation (race condition from React StrictMode)
+    if (isCreatingOverlay) {
+      console.log("Overlay window creation already in progress, waiting...");
+      // Wait a bit and try to get the existing window
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const nowExisting = await WebviewWindow.getByLabel("overlay");
+      if (nowExisting) {
+        return nowExisting;
+      }
+    }
+
+    isCreatingOverlay = true;
 
     // Create a new pre-configured window
     const overlayWindow = new WebviewWindow("overlay", {
@@ -60,9 +78,11 @@ export const LaunchOverlayWindow = async () => {
     } catch (_) {}
 
     console.log("Magic dot window shown");
+    isCreatingOverlay = false; // Reset flag after successful creation
     return overlayWindow;
   } catch (error) {
     console.error("Failed to create magic dot window:", error);
+    isCreatingOverlay = false; // Reset flag on error
     throw error;
   }
 };
