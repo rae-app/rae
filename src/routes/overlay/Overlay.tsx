@@ -25,8 +25,6 @@ const MagicDot = () => {
   const [micOn, setMicOn] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [showInput, setShowInput] = useState(true); // NEW STATE
-  const [windowName, setWindowName] = useState("");
-  const [windowIcon, setWindowIcon] = useState("");
 
   // Chat state
   const [showChat, setShowChat] = useState(false);
@@ -50,31 +48,12 @@ const MagicDot = () => {
   const openMessageIndexRef = useRef<number>(0);
 
   useEffect(() => {
-    invoke("start_window_watch").catch(() => {});
-
-    interface ActiveWindowChangedPayload {
-      name?: string;
-      icon?: string; // data UR (e.g., data:image/png;base64,...)
-    }
-
-    const unlistenPromise = listen<ActiveWindowChangedPayload>(
-      "active_window_changed",
-      (event) => {
-        if (event?.payload) {
-          const { name, icon } = event.payload;
-          setWindowName(name ?? "");
-          setWindowIcon(icon ?? "");
-        }
-      },
-    );
-
     // Force top-center positioning after component mounts
     const positionTimer = setTimeout(() => {
       invoke("force_top_center_magic_dot").catch(() => {});
     }, 200);
 
     return () => {
-      unlistenPromise.then((unlisten) => unlisten());
       clearTimeout(positionTimer);
     };
   }, []);

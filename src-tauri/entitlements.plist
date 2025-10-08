@@ -36,6 +36,10 @@
     <!-- Automation and scripting -->
     <key>com.apple.security.automation.apple-events</key>
     <true/>
+
+    <!-- Screen recording (required for window capture) -->
+    <key>com.apple.security.screen-capture</key>
+    <true/>
 </dict>
 </plist>
 

@@ -251,6 +251,8 @@ const Overlay = () => {
   }, [inputActive]);
 
   useEffect(() => {
+    // Start window watch to monitor active windows
+    // But screenshot capture only happens when isActive is true
     invoke("start_window_watch").catch(() => {});
     const unlistenPromise = listen<{
       name?: string;

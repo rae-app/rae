@@ -453,12 +453,114 @@ fn ensure_selection_watcher_started(_app: &AppHandle) {
 }
 
 #[cfg(target_os = "macos")]
-fn ensure_rae_watcher_started(_app: &AppHandle) {
+fn ensure_rae_watcher_started(app: &AppHandle) {
     if RAE_WATCHER_RUNNING.swap(true, Ordering::SeqCst) {
         return;
     }
-    // macOS keyboard hook requires CGEventTap
-    // Placeholder for future implementation
+    let app_handle = app.clone();
+    std::thread::spawn(move || {
+        use std::collections::VecDeque;
+
+        // External C function from Core Graphics
+        extern "C" {
+            fn CGEventSourceKeyState(stateID: i32, key: u16) -> bool;
+        }
+
+        let mut typed_chars: VecDeque<char> = VecDeque::new();
+        let mut last_key_time = std::time::Instant::now();
+        let mut last_key_states: std::collections::HashMap<i64, bool> = std::collections::HashMap::new();
+
+        // Polling-based keyboard monitoring (works without accessibility permissions)
+        loop {
+            if !RAE_WATCHER_ENABLED.load(Ordering::Relaxed) {
+                RAE_WATCHER_RUNNING.store(false, Ordering::SeqCst);
+                break;
+            }
+            
+            let now = std::time::Instant::now();
+
+            // Reset sequence if too much time has passed (3 seconds)
+            if !typed_chars.is_empty()
+                && now.duration_since(last_key_time) > std::time::Duration::from_secs(3)
+            {
+                typed_chars.clear();
+            }
+
+            // Key codes for macOS
+            // @ = Shift + 2 (keycode 19)
+            // R = 15, A = 0, E = 14
+            let shift_keycode: u16 = 56; // Left Shift
+            let two_keycode: u16 = 19;
+            let r_keycode: u16 = 15;
+            let a_keycode: u16 = 0;
+            let e_keycode: u16 = 14;
+            let backspace_keycode: u16 = 51;
+            let return_keycode: u16 = 36;
+            let space_keycode: u16 = 49;
+
+            // Check key states using CGEventSourceKeyState
+            // CGEventSourceStateID::CombinedSessionState = 0
+            unsafe {
+                let shift_pressed = CGEventSourceKeyState(0, shift_keycode);
+                let two_pressed = CGEventSourceKeyState(0, two_keycode);
+                let r_pressed = CGEventSourceKeyState(0, r_keycode);
+                let a_pressed = CGEventSourceKeyState(0, a_keycode);
+                let e_pressed = CGEventSourceKeyState(0, e_keycode);
+                let backspace_pressed = CGEventSourceKeyState(0, backspace_keycode);
+                let return_pressed = CGEventSourceKeyState(0, return_keycode);
+                let space_pressed = CGEventSourceKeyState(0, space_keycode);
+
+                // Detect @ symbol (Shift + 2) - only register on key press (transition from not pressed to pressed)
+                let at_detected = shift_pressed && two_pressed;
+                let was_at_pressed = last_key_states.get(&(two_keycode as i64)).copied().unwrap_or(false);
+                
+                if at_detected && !was_at_pressed && (typed_chars.is_empty() || typed_chars.len() > 3) {
+                    typed_chars.clear();
+                    typed_chars.push_back('@');
+                    last_key_time = now;
+                }
+
+                // Detect 'r' after '@'
+                let was_r_pressed = last_key_states.get(&(r_keycode as i64)).copied().unwrap_or(false);
+                if r_pressed && !was_r_pressed && !typed_chars.is_empty() && typed_chars.len() == 1 && typed_chars[0] == '@' {
+                    typed_chars.push_back('r');
+                    last_key_time = now;
+                }
+
+                // Detect 'a' after '@r'
+                let was_a_pressed = last_key_states.get(&(a_keycode as i64)).copied().unwrap_or(false);
+                if a_pressed && !was_a_pressed && !typed_chars.is_empty() && typed_chars.len() == 2 && typed_chars[1] == 'r' {
+                    typed_chars.push_back('a');
+                    last_key_time = now;
+                }
+
+                // Detect 'e' after '@ra' - this completes @rae
+                let was_e_pressed = last_key_states.get(&(e_keycode as i64)).copied().unwrap_or(false);
+                if e_pressed && !was_e_pressed && !typed_chars.is_empty() && typed_chars.len() == 3 && typed_chars[2] == 'a' {
+                    typed_chars.push_back('e');
+                    let sequence: String = typed_chars.iter().collect();
+                    if sequence == "@rae" {
+                        let _ = app_handle.emit("rae_mentioned", serde_json::json!({}));
+                        typed_chars.clear();
+                    }
+                }
+
+                // Reset on backspace, enter, or space
+                if (backspace_pressed || return_pressed || space_pressed) && !typed_chars.is_empty() {
+                    typed_chars.clear();
+                }
+
+                // Update last key states
+                last_key_states.insert(two_keycode as i64, at_detected);
+                last_key_states.insert(r_keycode as i64, r_pressed);
+                last_key_states.insert(a_keycode as i64, a_pressed);
+                last_key_states.insert(e_keycode as i64, e_pressed);
+            }
+
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        }
+        RAE_WATCHER_RUNNING.store(false, Ordering::SeqCst);
+    });
 }
 #[tauri::command]
 pub fn set_auto_show_on_copy_enabled(app: AppHandle, enabled: bool) {
