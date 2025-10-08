@@ -814,6 +814,7 @@ const Overlay = () => {
 
   const handlePinClick = async () => {
     const newPinned = !isPinned;
+    const window = getCurrentWebviewWindow();
 
     if (newPinned) {
       // Pinning the overlay
@@ -824,7 +825,6 @@ const Overlay = () => {
       console.log("Pin: Reset notch disable flag for proper timing");
 
       // Ensure window is visible and on top
-      const window = getCurrentWebviewWindow();
       await window.show();
       await window.setAlwaysOnTop(true);
       await window.setFocus();
@@ -836,12 +836,18 @@ const Overlay = () => {
       console.log("Overlay pinned and centered at top");
     } else {
       // Unpinning the overlay
-      console.log("Unpinned overlay bar");
+      console.log("Unpinning overlay bar...");
+      
+      // Reset notch state
       setIsNotch(false);
       if (notchTimeoutRef.current) {
         clearTimeout(notchTimeoutRef.current);
         notchTimeoutRef.current = null;
       }
+
+      // Reset window state - remove always-on-top
+      await window.setAlwaysOnTop(false);
+      console.log("Overlay unpinned - removed always-on-top");
     }
 
     setIsPinned(newPinned);
