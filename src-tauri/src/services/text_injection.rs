@@ -108,11 +108,6 @@ fn inject_text_via_clipboard(text: String, hwnd: WindowHandle) -> Result<(), Str
         CloseClipboard, EmptyClipboard, OpenClipboard, SetClipboardData, CF_UNICODETEXT,
     };
 
-    println!(
-        "🔄 Starting clipboard injection for {} characters",
-        text.len()
-    );
-
     unsafe {
         if SetForegroundWindow(hwnd) == 0 {
             return Err("Failed to bring target window to foreground".into());
@@ -221,7 +216,6 @@ fn inject_text_via_clipboard(text: String, hwnd: WindowHandle) -> Result<(), Str
         std::thread::sleep(std::time::Duration::from_millis(10));
         SendInput(1, &mut ctrl_up, std::mem::size_of::<INPUT>() as i32);
 
-        println!("✅ Clipboard injection completed successfully");
         Ok(())
     }
 }
@@ -231,41 +225,28 @@ fn inject_text_via_clipboard(text: String, window_id: WindowHandle) -> Result<()
     use cocoa::appkit::NSPasteboard;
     use cocoa::foundation::{NSArray, NSAutoreleasePool, NSString};
 
-    println!(
-        "🔄 [macOS Inject] Starting clipboard injection for {} characters to window {}",
-        text.len(),
-        window_id
-    );
-
     unsafe {
         let pool = NSAutoreleasePool::new(nil);
 
         // CRITICAL: Activate the target window first (like SetForegroundWindow on Windows)
-        println!("🎯 [macOS Inject] Step 1: Activating target window {}", window_id);
 
         // Get the PID of the target window
         if let Some(pid) = crate::platform::platform_impl::get_pid_from_window_id(window_id) {
-            println!("   Found PID: {}", pid);
 
             // Get the NSRunningApplication for this PID
             let workspace: id = msg_send![class!(NSWorkspace), sharedWorkspace];
             let running_apps: id = msg_send![workspace, runningApplications];
             let count: usize = msg_send![running_apps, count];
 
-            println!("   Searching through {} running apps", count);
-
             for i in 0..count {
                 let app: id = msg_send![running_apps, objectAtIndex: i];
                 let app_pid: i32 = msg_send![app, processIdentifier];
 
                 if app_pid == pid {
-                    println!("   ✅ Found matching app, activating...");
                     // Activate the application
                     let success: bool = msg_send![app, activateWithOptions: 0]; // NSApplicationActivateIgnoringOtherApps
                     if !success {
                         eprintln!("   ⚠️ Failed to activate app");
-                    } else {
-                        println!("   ✅ App activated successfully");
                     }
                     break;
                 }
@@ -278,7 +259,6 @@ fn inject_text_via_clipboard(text: String, window_id: WindowHandle) -> Result<()
         }
 
         // Get general pasteboard
-        println!("📋 [macOS Inject] Step 2: Writing to clipboard");
         let pasteboard: id = msg_send![class!(NSPasteboard), generalPasteboard];
 
         // Clear pasteboard
@@ -296,13 +276,10 @@ fn inject_text_via_clipboard(text: String, window_id: WindowHandle) -> Result<()
             return Err("Failed to write to clipboard".to_string());
         }
 
-        println!("   ✅ Text written to clipboard");
-
         // Wait a bit to ensure clipboard is ready
         std::thread::sleep(std::time::Duration::from_millis(50));
 
         // Simulate Command+V
-        println!("⌨️  [macOS Inject] Step 3: Sending Command+V keypress");
         let source = match CGEventSource::new(CGEventSourceStateID::CombinedSessionState) {
             Ok(s) => s,
             Err(_) => {
@@ -320,7 +297,6 @@ fn inject_text_via_clipboard(text: String, window_id: WindowHandle) -> Result<()
             }
         };
         cmd_down.post(CGEventTapLocation::HID);
-        println!("   ⌘ Command key pressed");
 
         std::thread::sleep(std::time::Duration::from_millis(50));
 
@@ -334,7 +310,6 @@ fn inject_text_via_clipboard(text: String, window_id: WindowHandle) -> Result<()
         };
         v_down.set_flags(core_graphics::event::CGEventFlags::CGEventFlagCommand);
         v_down.post(CGEventTapLocation::HID);
-        println!("   V V key pressed");
 
         std::thread::sleep(std::time::Duration::from_millis(50));
 
@@ -348,7 +323,6 @@ fn inject_text_via_clipboard(text: String, window_id: WindowHandle) -> Result<()
         };
         v_up.set_flags(core_graphics::event::CGEventFlags::CGEventFlagCommand);
         v_up.post(CGEventTapLocation::HID);
-        println!("   ↑ V key released");
 
         std::thread::sleep(std::time::Duration::from_millis(50));
 
@@ -361,10 +335,8 @@ fn inject_text_via_clipboard(text: String, window_id: WindowHandle) -> Result<()
             }
         };
         cmd_up.post(CGEventTapLocation::HID);
-        println!("   ↑ Command key released");
 
         let _: () = msg_send![pool, drain];
-        println!("✅ [macOS Inject] Text injection completed successfully!");
         Ok(())
     }
 }
