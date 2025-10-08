@@ -7,6 +7,7 @@
 mod audio_client;
 mod functions;
 mod platform;
+mod services;
 mod utils;
 
 // Import required traits
@@ -240,7 +241,7 @@ fn main() {
             functions::overlay::enable_notch,
             functions::overlay::follow_magic_dot,
             functions::overlay::pin_magic_dot,
-            functions::general::start_window_watch,
+            services::window_capture::start_window_watch,
             functions::overlay::start_notch_watcher,
             functions::overlay::close_magic_dot,
             functions::overlay::close_magic_chat,
@@ -266,13 +267,13 @@ fn main() {
             functions::stealth::set_stealth_mode_enabled,
             functions::stealth::get_stealth_mode_enabled,
             functions::stealth::apply_stealth_mode_to_window,
-            functions::general::inject_text_to_window_by_title,
-            functions::general::inject_text_to_window_by_hwnd,
-            functions::general::capture_window_screenshot,
-            functions::general::capture_window_screenshot_by_title,
-            functions::general::capture_window_screenshot_by_hwnd,
-            functions::general::set_auto_start_enabled,
-            functions::general::get_auto_start_enabled,
+            services::text_injection::inject_text_to_window_by_title,
+            services::text_injection::inject_text_to_window_by_hwnd,
+            services::screenshot_service::capture_window_screenshot,
+            services::screenshot_service::capture_window_screenshot_by_title,
+            services::screenshot_service::capture_window_screenshot_by_hwnd,
+            services::auto_start::set_auto_start_enabled,
+            services::auto_start::get_auto_start_enabled,
             functions::supermemory::create_connection,
             create_tray,
             hide_main_to_tray,
