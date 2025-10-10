@@ -22,8 +22,6 @@ const MagicDot = () => {
   const hoverExpandTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const collapseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Dimensions for expanded bar and collapsed notch
-  const EXPANDED = { w: 500, h: 60 } as const;
   const NOTCH = { w: 180, h: 28 } as const;
 
   useEffect(() => {
