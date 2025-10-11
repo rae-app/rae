@@ -12,10 +12,7 @@ import {
 } from "@/api/chat";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, Minimize2, Image, Plus } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkBreaks from "remark-breaks";
-import CodeBlock from "@/components/misc/CodeBlock";
+import MarkdownRenderer from "@/components/misc/MarkdownRenderer";
 
 import { animations } from "@/constants/animations";
 import { invoke } from "@tauri-apps/api/core";
@@ -26,6 +23,11 @@ import {
   generateContextAwarePrompt,
 } from "@/utils/textExtraction";
 import WebSearchAnimation from "./WebSearchAnimation";
+import OverlayMaximized from "./OverlayMaximized";
+import * as mediaUtils from "../utils/media";
+import * as messagesUtils from "../utils/messages";
+import { injectTextToWindow } from "../utils/inject";
+import * as uiUtils from "../utils/ui";
 import { openaiLogo } from "@/constants/logos";
 import { OverlayButton } from "./OverlayComponents";
 import {
@@ -130,18 +132,8 @@ export const ChatView = ({
     }[]
   >([]);
 
-  // Helper to get the images to preview/send, always including windowScreenshot if isActive (analysis mode)
-  const getImagesToSend = () => {
-    let imgs = attachedImages;
-    // If analysis is on and windowScreenshot exists, ensure it's included (but not duplicated)
-    if (isActive && windowScreenshot) {
-      if (!imgs.includes(windowScreenshot)) {
-        imgs = [windowScreenshot, ...imgs];
-      }
-    }
-    // Limit to 3 images
-    return imgs.slice(0, 3);
-  };
+  // Helper to get the images to preview/send
+  const getImagesToSend = () => mediaUtils.getImagesToSend(attachedImages, isActive, windowScreenshot);
   const [stealthMode, setStealthMode] = useState<boolean>(false);
   const [hoveredImageIndex, setHoveredImageIndex] = useState<number | null>(
     null,
@@ -326,7 +318,6 @@ export const ChatView = ({
     if (userMsg.trim() === "") return;
     const imagesToSend = manualImage ? [manualImage] : getImagesToSend();
 
-    // Note: File content will be processed by the backend
     let enhancedMessage = userMsg;
     // Create context for smart AI prompting
     const insertionContext: InsertionContext = {
@@ -338,18 +329,18 @@ export const ChatView = ({
       enhancedMessage,
       insertionContext,
     );
-    console.log("handleAIResponse: Processing message with context:", {
-      originalMessage: userMsg,
-      enhancedMessage,
-      contextAwareMessage: contextAwareMessage,
-      windowName,
-      detectedContext: insertionContext.detectedContext,
-      manualImageLength: manualImage ? 1 : 0,
-      attachedImagesLength: attachedImages.length,
-      attachedFilesLength: attachedFiles.length,
-      windowScreenshotLength: windowScreenshot?.length || 0,
-      imagesToSendLength: imagesToSend.length,
-    });
+    // console.log("handleAIResponse: Processing message with context:", {
+    //   originalMessage: userMsg,
+    //   enhancedMessage,
+    //   contextAwareMessage: contextAwareMessage,
+    //   windowName,
+    //   detectedContext: insertionContext.detectedContext,
+    //   manualImageLength: manualImage ? 1 : 0,
+    //   attachedImagesLength: attachedImages.length,
+    //   attachedFilesLength: attachedFiles.length,
+    //   windowScreenshotLength: windowScreenshot?.length || 0,
+    //   imagesToSendLength: imagesToSend.length,
+    // });
     const newMessages = [
       ...messages,
       {
@@ -469,120 +460,14 @@ export const ChatView = ({
     setAttachedFiles([]);
   };
 
-  // Handle image paste
-  const handlePaste = (e: React.ClipboardEvent) => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      if (item.type.indexOf("image") !== -1) {
-        e.preventDefault();
-        const file = item.getAsFile();
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            const base64 = event.target?.result as string;
-            setAttachedImages((prev) => {
-              if (prev.length >= 3) return prev;
-              return [...prev, base64];
-            });
-          };
-          reader.readAsDataURL(file);
-        }
-        break;
-      }
-    }
-  };
+  const handlePaste = (e: React.ClipboardEvent) => mediaUtils.handlePasteImage(e, setAttachedImages);
 
   // Clear attached image
-  const clearImage = (idx: number) => {
-    setAttachedImages((prev) => prev.filter((_, i) => i !== idx));
-  };
+  const clearImage = (idx: number) => mediaUtils.removeAttachedImage(setAttachedImages, idx);
 
-  // Handle file selection
-  const handleFileSelect = async () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.multiple = true;
-    input.accept = "*/*"; // Allow all file types
+  const handleFileSelect = async () => mediaUtils.openFileSelector(setAttachedFiles);
 
-    input.onchange = (e) => {
-      const files = (e.target as HTMLInputElement).files;
-      if (files) {
-        Array.from(files).forEach((file) => {
-          // Check file size (limit to 10MB)
-          if (file.size > 10 * 1024 * 1024) {
-            alert(`File ${file.name} is too large. Maximum size is 10MB.`);
-            return;
-          }
-
-          const reader = new FileReader();
-
-          // For text files, also store the text content
-          if (
-            file.type.startsWith("text/") ||
-            file.name.toLowerCase().endsWith(".txt") ||
-            file.name.toLowerCase().endsWith(".js") ||
-            file.name.toLowerCase().endsWith(".ts") ||
-            file.name.toLowerCase().endsWith(".py") ||
-            file.name.toLowerCase().endsWith(".json") ||
-            file.name.toLowerCase().endsWith(".md") ||
-            file.name.toLowerCase().endsWith(".html") ||
-            file.name.toLowerCase().endsWith(".css") ||
-            file.name.toLowerCase().endsWith(".xml")
-          ) {
-            const textReader = new FileReader();
-            textReader.onload = (textEvent) => {
-              const textContent = textEvent.target?.result as string;
-              const base64Reader = new FileReader();
-              base64Reader.onload = (base64Event) => {
-                const base64 = base64Event.target?.result as string;
-                setAttachedFiles((prev) => {
-                  if (prev.length >= 5) return prev; // Limit to 5 files
-                  return [
-                    ...prev,
-                    {
-                      name: file.name,
-                      type: file.type,
-                      size: file.size,
-                      content: base64,
-                      textContent: textContent,
-                    },
-                  ];
-                });
-              };
-              base64Reader.readAsDataURL(file);
-            };
-            textReader.readAsText(file);
-          } else {
-            reader.onload = (event) => {
-              const base64 = event.target?.result as string;
-              setAttachedFiles((prev) => {
-                if (prev.length >= 5) return prev; // Limit to 5 files
-                return [
-                  ...prev,
-                  {
-                    name: file.name,
-                    type: file.type,
-                    size: file.size,
-                    content: base64,
-                  },
-                ];
-              });
-            };
-            reader.readAsDataURL(file);
-          }
-        });
-      }
-    };
-
-    input.click();
-  };
-
-  // Clear attached file
-  const clearFile = (idx: number) => {
-    setAttachedFiles((prev) => prev.filter((_, i) => i !== idx));
-  };
+  const clearFile = (idx: number) => mediaUtils.removeAttachedFile(setAttachedFiles, idx);
 
   const getPlaceholderText = () => {
     if (attachedImages.length > 0) {
@@ -605,18 +490,8 @@ export const ChatView = ({
   };
 
   const handleReferenceImage = (imageBase64: string) => {
-    setAttachedImages((prev) => {
-      if (prev.length >= 3) return prev;
-      return [...prev, imageBase64];
-    });
-
-    // If not already on image generation tool, switch to it for better workflow
-    // if (selectedTool !== 4) {
-    //   setSelectedTool(4);
-    // }
-
+    mediaUtils.addReferencedImage(setAttachedImages, imageBase64);
     setImageReferenced(true);
-    // Clear the notification after 3 seconds for image generation, 2 for others
     const timeout = selectedTool === 4 ? 3000 : 2000;
     setTimeout(() => setImageReferenced(false), timeout);
   };
@@ -843,8 +718,7 @@ export const ChatView = ({
     setAttachedFiles([]);
   };
 
-  const getCurrentTime = () =>
-    new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const getCurrentTime = uiUtils.getCurrentTime;
 
   const handleInject = async () => {
     try {
@@ -897,59 +771,7 @@ export const ChatView = ({
 
   const [optionsOpen, setOptionsOpen] = useState(false);
 
-  // Simple page components for maximized state
-  const renderPageContent = () => {
-    switch (currentPage) {
-      case "chat":
-        return null; // Return null to show the regular chat content
-      case "settings":
-        return (
-          <div
-            className={`text-foreground overflow-y-auto ${
-              isMaximized ? "w-full px-6 py-4 mt-2" : "flex-1 p-4"
-            }`}
-            style={isMaximized ? { height: "calc(100vh - 80px)" } : {}}
-          >
-            <h2 className="text-xl font-semibold mb-6">Settings</h2>
-            <div className="space-y-4 max-w-4xl mx-auto">
-              <div className="p-4 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
-                <h3 className="font-medium mb-2">Preferences</h3>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                  Configure your app preferences here
-                </p>
-              </div>
-              <div className="p-4 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
-                <h3 className="font-medium mb-2">Shortcuts</h3>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                  Manage keyboard shortcuts
-                </p>
-              </div>
-            </div>
-          </div>
-        );
-      case "notes":
-        return (
-          <div
-            className={`text-foreground overflow-y-auto ${
-              isMaximized ? "w-full px-6 py-4 mt-2" : "flex-1 p-4"
-            }`}
-            style={isMaximized ? { height: "calc(100vh - 80px)" } : {}}
-          >
-            <h2 className="text-xl font-semibold mb-6">Notes</h2>
-            <div className="space-y-4 max-w-4xl mx-auto">
-              <div className="p-4 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
-                <h3 className="font-medium mb-2">Your Notes</h3>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                  Access and manage your notes
-                </p>
-              </div>
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
+  // Maximized page content moved to `OverlayMaximized` component
 
   return (
     <motion.div
@@ -995,7 +817,7 @@ export const ChatView = ({
                 </div>
               </div>
             </div>
-            {renderPageContent()}
+            <OverlayMaximized currentPage={currentPage} isMaximized={isMaximized} />
           </>
         ) : (
           <>
@@ -1129,94 +951,7 @@ export const ChatView = ({
                           <div className="space-y-3">
                             {(() => {
                               try {
-                                return (
-                                  <ReactMarkdown
-                                    remarkPlugins={[remarkGfm, remarkBreaks]}
-                                    components={{
-                                      p: ({ children }) => (
-                                        <p className="mb-3 last:mb-0 leading-7 text-[15px]">
-                                          {children}
-                                        </p>
-                                      ),
-                                      h1: ({ children }) => (
-                                        <h1 className="text-xl font-semibold mb-3 mt-6 first:mt-0 text-foreground dark:text-white">
-                                          {children}
-                                        </h1>
-                                      ),
-                                      h2: ({ children }) => (
-                                        <h2 className="text-lg font-semibold mb-3 mt-5 first:mt-0 text-foreground dark:text-white">
-                                          {children}
-                                        </h2>
-                                      ),
-                                      h3: ({ children }) => (
-                                        <h3 className="text-base font-semibold mb-2 mt-4 first:mt-0 text-foreground dark:text-white">
-                                          {children}
-                                        </h3>
-                                      ),
-                                      ul: ({ children }) => (
-                                        <ul className="list-disc list-inside mb-3 space-y-1 ml-2">
-                                          {children}
-                                        </ul>
-                                      ),
-                                      ol: ({ children }) => (
-                                        <ol className="list-decimal list-inside mb-3 space-y-1 ml-2">
-                                          {children}
-                                        </ol>
-                                      ),
-                                      li: ({ children }) => (
-                                        <li className="text-[15px] leading-6 ml-2">
-                                          {children}
-                                        </li>
-                                      ),
-                                      blockquote: ({ children }) => (
-                                        <blockquote className="border-l-4 border-zinc-300 dark:border-zinc-600 pl-4 py-2 mb-3 italic text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800/50 rounded-r">
-                                          {children}
-                                        </blockquote>
-                                      ),
-                                      strong: ({ children }) => (
-                                        <strong className="font-semibold text-foreground dark:text-white">
-                                          {children}
-                                        </strong>
-                                      ),
-                                      em: ({ children }) => (
-                                        <em className="italic text-foreground dark:text-zinc-200">
-                                          {children}
-                                        </em>
-                                      ),
-                                      a: ({ href, children }) => (
-                                        <a
-                                          href={href}
-                                          className="text-blue-500 hover:text-blue-600 underline underline-offset-2"
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                        >
-                                          {children}
-                                        </a>
-                                      ),
-                                      code: ({
-                                        className,
-                                        children,
-                                        ...props
-                                      }: any) => {
-                                        const inline = props.inline;
-                                        return (
-                                          <CodeBlock
-                                            className={className}
-                                            inline={inline}
-                                            {...props}
-                                          >
-                                            {String(children).replace(
-                                              /\n$/,
-                                              "",
-                                            )}
-                                          </CodeBlock>
-                                        );
-                                      },
-                                    }}
-                                  >
-                                    {msg.text || ""}
-                                  </ReactMarkdown>
-                                );
+                                return <MarkdownRenderer source={msg.text || ""} />;
                               } catch (error) {
                                 console.error("Markdown render error:", error);
                                 return (
@@ -1337,34 +1072,7 @@ export const ChatView = ({
                     <div className="max-w-[85%] bg-transparent text-foreground">
                       <div className="prose prose-base max-w-none text-foreground dark:text-zinc-100 leading-relaxed">
                         <div className="space-y-3">
-                          <ReactMarkdown
-                            remarkPlugins={[remarkGfm, remarkBreaks]}
-                            components={{
-                              p: ({ children }) => (
-                                <p className="mb-3 last:mb-0 leading-7 text-[15px]">
-                                  {children}
-                                </p>
-                              ),
-                              code: ({
-                                className,
-                                children,
-                                ...props
-                              }: any) => {
-                                const inline = props.inline;
-                                return (
-                                  <CodeBlock
-                                    className={className}
-                                    inline={inline}
-                                    {...props}
-                                  >
-                                    {String(children).replace(/\n$/, "")}
-                                  </CodeBlock>
-                                );
-                              },
-                            }}
-                          >
-                            {streamingMsg}
-                          </ReactMarkdown>
+                          <MarkdownRenderer source={streamingMsg} />
                           {/* Streaming cursor */}
                           <span className="inline-block w-2 h-5 bg-zinc-600 dark:bg-zinc-400 animate-pulse ml-1" />
                         </div>
