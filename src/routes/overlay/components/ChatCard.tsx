@@ -204,34 +204,26 @@ export const ChatView = ({
       }),
     });
 
-    console.log("Response status:", response.status);
-    console.log("Response headers:", response.headers);
-    console.log("Starting streaming connection...");
     const reader = response.body?.getReader();
     if (!reader) {
       throw new Error("ReadableStream not supported in this environment.");
     }
-    console.log("Reader obtained, starting to read stream...");
     const decoder = new TextDecoder();
     let fullText = "";
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) {
-        console.log("Stream finished");
         break;
       }
       const chunk = decoder.decode(value, { stream: true });
-      console.log("Raw chunk received:", chunk);
       chunk.split("\n\n").forEach((event) => {
         if (!event.trim()) return;
         const dataLine = event.replace(/^data:\s*/, "");
         try {
           const data = JSON.parse(dataLine);
           if (data.type === "chunk") {
-            console.log("Frontend received chunk:", data.content);
             fullText += data.content;
-            console.log("fullText length now:", fullText.length);
             setStreamingMsg((prev) => prev + data.content);
           } else if (data.type == "title") {
             if (overlayConvoId === -1) {
@@ -241,19 +233,7 @@ export const ChatView = ({
             // Optionally handle title
           } else if (data.type === "search_site_found") {
             // Handle real-time search progress
-            console.log("Frontend received search_site_found:", data);
-            console.log(
-              "Window has addRealSearchSite:",
-              !!(window as any).addRealSearchSite,
-            );
             if ((window as any).addRealSearchSite) {
-              console.log("Calling addRealSearchSite with:", {
-                site: data.site,
-                domain: data.domain,
-                favicon: data.favicon,
-                title: data.title,
-                link: data.link,
-              });
               try {
                 (window as any).addRealSearchSite({
                   site: data.site,
@@ -262,31 +242,16 @@ export const ChatView = ({
                   title: data.title,
                   link: data.link,
                 });
-                console.log("addRealSearchSite called successfully");
               } catch (error) {
                 console.error("Error calling addRealSearchSite:", error);
               }
-            } else {
-              console.log("addRealSearchSite function not found on window");
             }
           } else if (data.type === "done") {
             // Stream complete
-            console.log(
-              "Frontend received 'done' event, fullText length:",
-              fullText.length,
-            );
-            console.log(
-              "fullText content preview:",
-              fullText.substring(0, 100) + "...",
-            );
             setStreamingMsg("");
             setCurrResponse(fullText);
             // Add final message to chat
             // Only append AI message, do not overwrite user message
-            console.log(
-              "Adding AI message to chat, current messages count:",
-              newMessages.length,
-            );
             setMessages([
               ...newMessages,
               { sender: "ai", text: fullText, image: "" },
@@ -329,18 +294,6 @@ export const ChatView = ({
       enhancedMessage,
       insertionContext,
     );
-    // console.log("handleAIResponse: Processing message with context:", {
-    //   originalMessage: userMsg,
-    //   enhancedMessage,
-    //   contextAwareMessage: contextAwareMessage,
-    //   windowName,
-    //   detectedContext: insertionContext.detectedContext,
-    //   manualImageLength: manualImage ? 1 : 0,
-    //   attachedImagesLength: attachedImages.length,
-    //   attachedFilesLength: attachedFiles.length,
-    //   windowScreenshotLength: windowScreenshot?.length || 0,
-    //   imagesToSendLength: imagesToSend.length,
-    // });
     const newMessages = [
       ...messages,
       {
@@ -355,7 +308,6 @@ export const ChatView = ({
     // Set appropriate animation state based on selected tool
     if (selectedTool === 1) {
       // Web search animation
-      console.log("Setting web search animation state");
       setCurrentSearchQuery(userMsg);
       setIsWebSearching(true);
       setIsAIThinking(false);
@@ -367,10 +319,6 @@ export const ChatView = ({
     try {
       let ai_res;
       if (imagesToSend.length === 0) {
-        console.log(
-          "🔧 About to call handleStreamAIResponse with selectedTool:",
-          selectedTool,
-        );
         await handleStreamAIResponse(
           email,
           contextAwareMessage, // Use context-aware message
@@ -426,12 +374,6 @@ export const ChatView = ({
   // Effect to handle the initial message passed from the overlay bar
   useEffect(() => {
     if (initialMessage) {
-      console.log("📨 ChatCard: Received initial message:", {
-        message: initialMessage,
-        hasImage: !!initialAttachedImage,
-        imageLength: initialAttachedImage?.length || 0,
-      });
-
       if (initialAttachedImage) {
         setAttachedImages([initialAttachedImage]);
       }
@@ -698,7 +640,6 @@ export const ChatView = ({
     setIsInputTyping(false);
     if (selectedTool === 1) {
       // Use the streaming web search implementation
-      console.log("Web search tool selected, using streaming implementation");
       handleAIResponse(userMsg);
     } else if (selectedTool === 2) {
       handleSupermemory(userMsg);
@@ -722,11 +663,6 @@ export const ChatView = ({
 
   const handleInject = async () => {
     try {
-      console.log("Starting injection...");
-      console.log("currResponse:", currResponse);
-      console.log("windowName:", windowName);
-      console.log("windowHwnd:", windowHwnd);
-
       if (!windowHwnd) {
         console.error("No window HWND available");
         return;
@@ -739,15 +675,10 @@ export const ChatView = ({
         // Will be auto-detected from windowName
       };
 
-      console.log("insertionContext:", insertionContext);
-
       const insertableText = extractInsertableContent(
         currResponse,
         insertionContext,
       );
-      console.log("Original currResponse:", currResponse);
-      console.log("Insertion context:", insertionContext);
-      console.log("Extracted insertableText:", insertableText);
 
       if (!insertableText) {
         console.warn("No insertable text extracted, using original response");
@@ -756,14 +687,11 @@ export const ChatView = ({
           hwnd: windowHwnd,
         });
       } else {
-        console.log("Injecting extracted text");
         await invoke("inject_text_to_window_by_hwnd", {
           text: insertableText,
           hwnd: windowHwnd,
         });
       }
-
-      console.log("Injection completed");
     } catch (error) {
       console.error("Injection failed:", error);
     }
