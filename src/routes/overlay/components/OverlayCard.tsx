@@ -190,7 +190,7 @@ const Overlay = () => {
       windowHwnd,
       windowName,
       hasIcon: !!windowIcon,
-      currentScreenshotLength: windowScreenshot.length
+      currentScreenshotLength: windowScreenshot.length,
     });
     localStorage.setItem("overlay_active", String(isActive));
     console.log("💾 Overlay active state saved:", isActive);
@@ -214,7 +214,7 @@ const Overlay = () => {
         console.log("📍 Current window info:", {
           windowHwnd,
           windowName,
-          hasIcon: !!windowIcon
+          hasIcon: !!windowIcon,
         });
 
         invoke("capture_window_screenshot_by_hwnd", {
@@ -225,10 +225,7 @@ const Overlay = () => {
             console.log("✅ Immediate screenshot captured!");
             console.log("   📏 Length:", screenshotStr.length);
             if (screenshotStr.length > 0) {
-              console.log(
-                "   🔤 Starts with:",
-                screenshotStr.substring(0, 50),
-              );
+              console.log("   🔤 Starts with:", screenshotStr.substring(0, 50));
               setWindowScreenshot(screenshotStr);
               console.log(
                 "✅ windowScreenshot state updated for chat functionality",
@@ -361,10 +358,7 @@ const Overlay = () => {
       console.log("Setting notch timeout:", NOTCH_TIMEOUT, "ms");
       notchTimeoutRef.current = setTimeout(() => {
         // Double check that user isn't typing when timeout fires and notch not disabled
-        if (
-          !inputActiveRef.current &&
-          !DISABLE_NOTCH_ON_SHOW.current
-        ) {
+        if (!inputActiveRef.current && !DISABLE_NOTCH_ON_SHOW.current) {
           console.log("Enabling notch - all conditions met");
           invoke("enable_notch")
             .then(() => {
@@ -510,7 +504,6 @@ const Overlay = () => {
           notchTimeoutRef.current = null;
         }
       }),
-
 
       listen("center_overlay_bar", () => {
         console.log("OverlayCard: Received center_overlay_bar event");
@@ -817,7 +810,6 @@ const Overlay = () => {
     }
   };
 
-
   // Handle image paste
   const handlePaste = (e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items;
@@ -1005,7 +997,7 @@ const Overlay = () => {
       windowHwnd,
       isHoveringTrigger,
       showScreenshot,
-      windowScreenshotLength: windowScreenshot.length
+      windowScreenshotLength: windowScreenshot.length,
     });
     setIsHoveringTrigger(true);
 
@@ -1021,7 +1013,9 @@ const Overlay = () => {
     }
 
     try {
-      console.log(`📸 Calling capture_window_screenshot_by_hwnd with hwnd=${windowHwnd}`);
+      console.log(
+        `📸 Calling capture_window_screenshot_by_hwnd with hwnd=${windowHwnd}`,
+      );
       const screenshot = (await invoke("capture_window_screenshot_by_hwnd", {
         hwnd: windowHwnd,
       })) as string;
@@ -1128,7 +1122,7 @@ const Overlay = () => {
               inputActive ? (
                 <div
                   key="overlay-card"
-                  className="relative flex w-full h-full items-center border-l border-border px-4 py-2 max-w-xs"
+                  className="relative flex w-full h-full items-center px-4 py-2 max-w-xs"
                 >
                   <input
                     autoFocus
@@ -1179,7 +1173,7 @@ const Overlay = () => {
               ) : (
                 <div
                   key="overlay-card"
-                  className={`flex w-full h-full items-center border-l border-border px-4 py-2 ${
+                  className={`flex w-full h-full items-center px-4 py-2 ${
                     !isPinned ? "drag" : ""
                   } dark:bg-[#010101] max-w-xs cursor-text`}
                   onClick={() => {
@@ -1209,7 +1203,7 @@ const Overlay = () => {
               <div
                 className={`flex ${
                   !isPinned ? "drag" : ""
-                } items-center gap-2 px-4 h-full py-2 text-sm border-l border-border text-gray-600 relative`}
+                } items-center gap-2 px-4 h-full py-2 text-sm text-gray-600 relative`}
                 onMouseEnter={handleScreenshotHover}
                 onMouseLeave={handleScreenshotLeave}
               >
@@ -1246,12 +1240,20 @@ const Overlay = () => {
                       alt="Window screenshot"
                       className="min-w-[250px] max-h-[350px] rounded shadow-md"
                       onLoad={() => {
-                        console.log("✅ Screenshot image loaded successfully in tooltip");
-                        console.log("   Image src starts with:", windowScreenshot.substring(0, 80));
+                        console.log(
+                          "✅ Screenshot image loaded successfully in tooltip",
+                        );
+                        console.log(
+                          "   Image src starts with:",
+                          windowScreenshot.substring(0, 80),
+                        );
                       }}
                       onError={(e) => {
                         console.error("❌ Screenshot image failed to load:", e);
-                        console.error("   Image src starts with:", windowScreenshot.substring(0, 80));
+                        console.error(
+                          "   Image src starts with:",
+                          windowScreenshot.substring(0, 80),
+                        );
                       }}
                       style={{ imageRendering: "crisp-edges" }}
                     />

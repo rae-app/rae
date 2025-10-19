@@ -1,9 +1,9 @@
 use crate::utils::{get_monitor_by_window_position, smooth_move, smooth_resize};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::Instant;
 use cocoa::base::{id, nil};
 use cocoa::foundation::{NSAutoreleasePool, NSPoint};
 use objc::{class, msg_send, sel, sel_impl};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Instant;
 use tauri::{
     utils::config::WindowEffectsConfig,
     window::{Effect, EffectsBuilder},
@@ -30,10 +30,17 @@ pub fn force_top_center_magic_dot(app: AppHandle) {
             if let Some(monitor) = get_monitor_by_window_position(&window, &app) {
                 let monitor_pos = monitor.position();
                 let screen_size = monitor.size();
-                let center_x = monitor_pos.x
-                    + ((screen_size.width as i32 - current_size.width as i32) / 2).max(0);
+
+                // Position notch to the left of Mac's physical notch
+                // Mac's notch is ~230px wide and centered, so we position our notch just to its left
+                let center_x = monitor_pos.x + (screen_size.width as i32 / 2);
+                let mac_notch_half_width = 115; // Half of Mac's ~230px notch
+                let spacing = 10; // Small gap between our notch and Mac's notch
+                let left_of_notch_x =
+                    center_x - mac_notch_half_width - current_size.width as i32 - spacing;
+
                 let target_pos = tauri::PhysicalPosition {
-                    x: center_x,
+                    x: left_of_notch_x.max(monitor_pos.x),
                     y: monitor_pos.y,
                 };
                 let _ = window.set_position(tauri::Position::Physical(target_pos));
@@ -58,10 +65,16 @@ pub fn pin_magic_dot(app: AppHandle) {
             if let Some(monitor) = get_monitor_by_window_position(&window, &app) {
                 let monitor_pos = monitor.position();
                 let screen_size = monitor.size();
-                let center_x = monitor_pos.x
-                    + ((screen_size.width as i32 - current_size.width as i32) / 2).max(0);
+
+                // Position notch to the left of Mac's physical notch
+                let center_x = monitor_pos.x + (screen_size.width as i32 / 2);
+                let mac_notch_half_width = 115;
+                let spacing = 10;
+                let left_of_notch_x =
+                    center_x - mac_notch_half_width - current_size.width as i32 - spacing;
+
                 let target_pos = tauri::PhysicalPosition {
-                    x: center_x,
+                    x: left_of_notch_x.max(monitor_pos.x),
                     y: monitor_pos.y,
                 };
                 // let _ = window.set_ignore_cursor_events(true);
