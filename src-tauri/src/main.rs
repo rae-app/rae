@@ -267,7 +267,6 @@ fn main() {
             functions::stealth::set_stealth_mode_enabled,
             functions::stealth::get_stealth_mode_enabled,
             functions::stealth::apply_stealth_mode_to_window,
-            services::text_injection::inject_text_to_window_by_title,
             services::text_injection::inject_text_to_window_by_hwnd,
             services::screenshot_service::capture_window_screenshot,
             services::screenshot_service::capture_window_screenshot_by_title,

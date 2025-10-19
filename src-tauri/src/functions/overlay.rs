@@ -1,7 +1,9 @@
 use crate::utils::{get_monitor_by_window_position, smooth_move, smooth_resize};
-use enigo::{Enigo, MouseControllable};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Instant;
+use cocoa::base::{id, nil};
+use cocoa::foundation::{NSAutoreleasePool, NSPoint};
+use objc::{class, msg_send, sel, sel_impl};
 use tauri::{
     utils::config::WindowEffectsConfig,
     window::{Effect, EffectsBuilder},
@@ -347,8 +349,6 @@ impl NotchWatcher {
         // Set the flag to indicate NotchWatcher is starting
         NOTCH_WATCHER_RUNNING.store(true, Ordering::SeqCst);
         std::thread::spawn(move || {
-            let enigo = Enigo::new();
-
             // Cache monitor info - update every 500ms instead of every 16ms
             let mut cached_monitor_info = Self::get_monitor_info(&window, &app);
             let mut last_monitor_check = Instant::now();
@@ -369,7 +369,15 @@ impl NotchWatcher {
                     last_monitor_check = now;
                 }
 
-                let (x, y) = enigo.mouse_location();
+                // Get mouse location using NSEvent
+                let mouse_location: NSPoint = unsafe {
+                    let pool = NSAutoreleasePool::new(nil);
+                    let location: NSPoint = msg_send![class!(NSEvent), mouseLocation];
+                    pool.drain();
+                    location
+                };
+                let x = mouse_location.x as i32;
+                let y = mouse_location.y as i32;
 
                 // Check if mouse is inside the cached notch area
                 if let Some((notch_x, notch_y)) = cached_monitor_info {

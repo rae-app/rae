@@ -12,9 +12,6 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
-[target.'cfg(target_os = "windows")'.build-dependencies]
-winres = "0.1"
-
 [dependencies]
 # ✅ only keep `tray-icon` feature, remove `menu` (it doesn't exist in Tauri v2)
 tauri = { version = "2", features = ["tray-icon", "image-png", "macos-private-api"] }
@@ -24,7 +21,6 @@ tauri-plugin-global-shortcut = "2"
 tauri-plugin-shell = "2.3.1"
 tauri-plugin-autostart = "2" #for starting the app
 
-enigo = "0.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 image = { version = "0.24", default-features = false, features = ["png"] }
@@ -39,41 +35,6 @@ tungstenite = "0.27.0"
 futures-util = "0.3.31"
 cpal = "0.16.0"
 once_cell = "1.19"
-
-# Windows-specific crates
-[target.'cfg(target_os = "windows")'.dependencies]
-winapi = { version = "0.3", features = [
-    "winuser",
-    "processthreadsapi",
-    "psapi",
-    "handleapi",
-    "winnt",
-    "shellapi",
-    "shlobj",
-    "combaseapi",
-    "objbase",
-    "shobjidl_core",
-    "propsys",
-    "wtypes",
-    "propidl",
-    "shtypes",
-    "winbase",
-    "wingdi",
-] }
-
-windows = { version = "0.51.1", features = [
-    "Win32_Foundation",
-    "Win32_System_Com",
-    "Win32_System_Variant",
-    "Win32_UI_Shell",
-    "Win32_UI_Shell_Common",
-    "Win32_UI_Shell_PropertiesSystem",
-    "Win32_System_Com_StructuredStorage",
-    "Win32_Graphics_Gdi",
-    "Win32_UI_Accessibility",
-] }
-
-uiautomation = "0.22.2"
 
 # macOS-specific crates
 [target.'cfg(target_os = "macos")'.dependencies]
