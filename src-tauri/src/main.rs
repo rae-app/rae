@@ -239,7 +239,7 @@ fn main() {
         // Register all the invokable commands from the `commands` module.
         .invoke_handler(tauri::generate_handler![
             functions::overlay::enable_notch,
-            functions::overlay::follow_magic_dot,
+            functions::overlay::force_top_center_magic_dot,
             functions::overlay::pin_magic_dot,
             services::window_capture::start_window_watch,
             functions::overlay::start_notch_watcher,

@@ -22,7 +22,7 @@ static ALLOW_MAGIC_DOT_CREATE: AtomicBool = AtomicBool::new(true);
 static mut LAST_OVERLAY_POSITION: Option<tauri::PhysicalPosition<i32>> = None;
 
 #[tauri::command]
-pub fn follow_magic_dot(app: AppHandle) {
+pub fn force_top_center_magic_dot(app: AppHandle) {
     if let Some(window) = app.get_webview_window("overlay") {
         if let Ok(current_size) = window.outer_size() {
             if let Some(monitor) = get_monitor_by_window_position(&window, &app) {

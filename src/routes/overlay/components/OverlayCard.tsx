@@ -6,7 +6,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { OverlayButton } from "./OverlayComponents";
 import { ChatView } from "./ChatCard";
 import {
-  Pin,
   X,
   Mic,
   Maximize,
@@ -32,7 +31,6 @@ import {
   FileTextIcon,
   GearSixIcon,
   MicrophoneIcon,
-  PushPinIcon,
   XIcon,
 } from "@phosphor-icons/react";
 import { useAtom } from "jotai";
@@ -87,10 +85,10 @@ const getNotchClasses = (isNotch: boolean) => {
 
   if (!isNotch) return `${baseClasses} text-foreground`;
 
-  // Match Windows version exactly: 180px × 28px with 12px bottom radius
+  // Match Windows version exactly: 60px × 28px with 12px bottom radius
   // Position at top-0 to sit right below Mac's physical notch (like Dynamic Island)
   const notchClasses =
-    "w-[180px] h-[28px] border-border backdrop-blur-sm absolute overflow-visible top-0";
+    "h-[28px] border-border backdrop-blur-sm absolute overflow-visible top-0";
   const backgroundClasses = "dark:bg-black bg-white";
 
   return `${baseClasses} ${notchClasses} ${backgroundClasses}`;
@@ -99,6 +97,8 @@ const getNotchClasses = (isNotch: boolean) => {
 const getNotchStyle = (isNotch: boolean) =>
   isNotch
     ? {
+        width: 0, // bhaia yaha bhi notch ki bkc he
+        height: 28, // bhaia yaha bhi notch ki bkc he
         boxShadow: NOTCH_SHADOW,
         borderTopLeftRadius: 0,
         borderTopRightRadius: 0,
@@ -109,7 +109,8 @@ const getNotchStyle = (isNotch: boolean) =>
 
 const Overlay = () => {
   // State for the overlay shell itself
-  const [isPinned, setIsPinned] = useState(false);
+  const [isPinned] = useState(true); // Always pinned now
+  const isInitialShowRef = useRef(true); // Track if this is the first time overlay is shown
   const [inputText, setInputText] = useState(""); // For the main input bar
   const [listening, setlistening] = useState(false);
   const [assist, setAssist] = useState(false);
@@ -348,15 +349,9 @@ const Overlay = () => {
       return;
     }
 
-    // Clear notch if not pinned
-    if (!isPinned && isNotch) {
-      setIsNotch(false);
-      return;
-    }
-
-    // Only set notch timeout if pinned, not in chat, not already notch, not typing, and notch not disabled
+    // Set notch timeout only after initial show (no pinning required), not in chat, not already notch, not typing, and notch not disabled
     if (
-      isPinned &&
+      !isInitialShowRef.current && // Don't auto-collapse on initial show
       !showChat &&
       !isNotch &&
       !inputActive &&
@@ -367,7 +362,6 @@ const Overlay = () => {
         // Double check that user isn't typing when timeout fires and notch not disabled
         if (
           !inputActiveRef.current &&
-          isPinned &&
           !DISABLE_NOTCH_ON_SHOW.current
         ) {
           console.log("Enabling notch - all conditions met");
@@ -375,6 +369,8 @@ const Overlay = () => {
             .then(() => {
               console.log("Notch enabled successfully");
               setIsNotch(true);
+              // Position to corner when entering notch mode
+              invoke("force_top_center_magic_dot").catch(() => {});
               // Play sound with perfect timing - synced with smooth resize animation (200ms total, play at 100ms)
               setTimeout(() => playNotchSound(bubbleSoundEnabled), 60);
             })
@@ -423,6 +419,8 @@ const Overlay = () => {
             .then(() => {
               console.log("Safety: Notch enabled via fallback");
               setIsNotch(true);
+              // Position to corner when entering notch mode
+              invoke("force_top_center_magic_dot").catch(() => {});
               setTimeout(() => playNotchSound(bubbleSoundEnabled), 60);
             })
             .catch((error) => {
@@ -501,24 +499,17 @@ const Overlay = () => {
       listen("disable_pin_on_show", () => {
         console.log("Disabling auto-pin on show");
         DISABLE_PIN_ON_SHOW.current = true;
-        setIsPinned(false);
+        // Mark that initial show has happened
+        isInitialShowRef.current = false;
       }),
 
       listen("unpin_for_center", () => {
-        setIsPinned(false);
         if (notchTimeoutRef.current) {
           clearTimeout(notchTimeoutRef.current);
           notchTimeoutRef.current = null;
         }
       }),
 
-      listen("toggle_pin_state", () => {
-        console.log("OverlayCard: Received toggle_pin_state event");
-        // Reset notch disable flag when using Ctrl+P to ensure proper 2s timeout
-        DISABLE_NOTCH_ON_SHOW.current = false;
-        console.log("Ctrl+P: Reset notch disable flag for proper 2s timeout");
-        handlePinClick();
-      }),
 
       listen("center_overlay_bar", () => {
         console.log("OverlayCard: Received center_overlay_bar event");
@@ -542,6 +533,16 @@ const Overlay = () => {
         promise.then((unlisten) => unlisten()),
       );
     };
+  }, []);
+
+  // Mark initial show as complete after a delay to allow user interaction
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      isInitialShowRef.current = false;
+      console.log("Initial show complete - auto-collapse now enabled");
+    }, 5000); // 5 seconds delay
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Handle assist mode changes - start/stop audio client
@@ -748,6 +749,8 @@ const Overlay = () => {
             .then(() => {
               console.log("Mouse leave: Notch enabled successfully");
               setIsNotch(true);
+              // Position to corner when entering notch mode
+              invoke("force_top_center_magic_dot").catch(() => {});
               // Play sound with perfect timing - synced with smooth resize animation (200ms total, play at 100ms)
               setTimeout(() => playNotchSound(bubbleSoundEnabled), 60);
             })
@@ -812,53 +815,6 @@ const Overlay = () => {
     }
   };
 
-  const handlePinClick = async () => {
-    console.log("📌 handlePinClick called - Current state:", {
-      isPinned,
-      isNotch,
-      showChat,
-    });
-    
-    const newPinned = !isPinned;
-    const window = getCurrentWebviewWindow();
-
-    if (newPinned) {
-      // Pinning the overlay
-      console.log("📍 Pinning overlay bar...");
-      // Reset both disable flags when user manually pins
-      DISABLE_PIN_ON_SHOW.current = false;
-      DISABLE_NOTCH_ON_SHOW.current = false;
-      console.log("Pin: Reset notch disable flag for proper timing");
-
-      // Ensure window is visible and on top
-      await window.show();
-      await window.setAlwaysOnTop(true);
-      await window.setFocus();
-
-      // Center the overlay at the top of the screen
-      const currentSize = await window.outerSize();
-      await resize(currentSize.width, currentSize.height, true);
-
-      console.log("✅ Overlay pinned and centered at top");
-    } else {
-      // Unpinning the overlay
-      console.log("📍 Unpinning overlay bar...");
-      
-      // Reset notch state
-      setIsNotch(false);
-      if (notchTimeoutRef.current) {
-        clearTimeout(notchTimeoutRef.current);
-        notchTimeoutRef.current = null;
-      }
-
-      // Reset window state - remove always-on-top
-      await window.setAlwaysOnTop(false);
-      console.log("✅ Overlay unpinned - removed always-on-top");
-    }
-
-    setIsPinned(newPinned);
-    console.log("✅ Pin state updated to:", newPinned);
-  };
 
   // Handle image paste
   const handlePaste = (e: React.ClipboardEvent) => {
@@ -945,13 +901,11 @@ const Overlay = () => {
       if (current == true) {
         // handleCloseChatClick();
         emit("show_app", { show: false });
-        handlePinClick();
         resize(500, 580);
         // setShowChat(false)
       } else {
         // handleCloseChatClick();
         emit("show_app", { show: true });
-        handlePinClick();
         resize(500, 60);
       }
       return !current;
@@ -1347,17 +1301,6 @@ const Overlay = () => {
                     <EarSlashIcon weight="bold" size={16} />
                   )}
                   {/* <EarIcon weight={listening ? "fill" : "bold"} /> */}
-                </OverlayButton>
-                <OverlayButton
-                  onClick={handlePinClick}
-                  active={isPinned}
-                  title="Pin"
-                  draggable={!isPinned}
-                  className={
-                    isPinned ? "!text-[#ffe941] dark:!text-surface" : ""
-                  }
-                >
-                  <PushPinIcon weight={isPinned ? "fill" : "bold"} />
                 </OverlayButton>
               </>
             )}

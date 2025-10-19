@@ -14,7 +14,7 @@ export const LaunchOverlayWindow = async () => {
     const WIDTH = 500; // broadened bar
     const HEIGHT = 60; // buffer to avoid clipping
 
-    // If window already exists, just resize and focus it
+    // If window already exists, just resize, position, and focus it
     const existing = await WebviewWindow.getByLabel("overlay");
     if (existing) {
       console.log("Overlay window already exists, reusing it");
@@ -24,11 +24,17 @@ export const LaunchOverlayWindow = async () => {
       await existing.show();
       await existing.setFocus();
       await existing.setAlwaysOnTop(true);
-      // Ensuring
-      // it starts collapsed dot state
+
+      // Position at top center
       try {
-        await existing.emit("collapse_to_dot");
+        await existing.emit("force_top_center_magic_dot");
       } catch (_) {}
+
+      // Keep expanded - don't collapse to notch initially
+      // The user wants it always pinned at top center
+      // try {
+      //   await existing.emit("collapse_to_dot");
+      // } catch (_) {}
       return existing;
     }
 
@@ -73,11 +79,19 @@ export const LaunchOverlayWindow = async () => {
     await overlayWindow.show();
     await overlayWindow.setFocus();
     await overlayWindow.setAlwaysOnTop(true);
+
+    // Position at top center
     try {
-      await overlayWindow.emit("collapse_to_dot");
+      await overlayWindow.emit("force_top_center_magic_dot");
     } catch (_) {}
 
-    console.log("Magic dot window shown");
+    // Keep expanded initially - don't collapse to notch
+    // The user wants it always pinned at top center
+    // try {
+    //   await overlayWindow.emit("collapse_to_dot");
+    // } catch (_) {}
+
+    console.log("Magic dot window shown and positioned at top center");
     isCreatingOverlay = false; // Reset flag after successful creation
     return overlayWindow;
   } catch (error) {
