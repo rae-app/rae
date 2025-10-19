@@ -85,11 +85,10 @@ const getNotchClasses = (isNotch: boolean) => {
 
   if (!isNotch) return `${baseClasses} text-foreground`;
 
-  // Match Windows version exactly: 60px × 28px with 12px bottom radius
-  // Position at top-0 to sit right below Mac's physical notch (like Dynamic Island)
-  const notchClasses =
-    "h-[28px] border-border backdrop-blur-sm absolute overflow-visible top-0";
-  const backgroundClasses = "dark:bg-black bg-white";
+  // Transparent notch - only show RaeWatcher logo, no background
+  // Position at top-0 to align with menu bar like system icons
+  const notchClasses = "h-[28px] w-[60px] absolute overflow-visible top-0";
+  const backgroundClasses = "bg-transparent";
 
   return `${baseClasses} ${notchClasses} ${backgroundClasses}`;
 };
@@ -97,13 +96,14 @@ const getNotchClasses = (isNotch: boolean) => {
 const getNotchStyle = (isNotch: boolean) =>
   isNotch
     ? {
-        width: 0, // bhaia yaha bhi notch ki bkc he
-        height: 28, // bhaia yaha bhi notch ki bkc he
-        boxShadow: NOTCH_SHADOW,
+        width: 60, // Width to show only RaeWatcher logo toggle (compact notch)
+        height: 28,
+        boxShadow: "none", // Remove shadow for transparent notch
+        backgroundColor: "transparent", // Fully transparent
         borderTopLeftRadius: 0,
         borderTopRightRadius: 0,
-        borderBottomLeftRadius: 12,
-        borderBottomRightRadius: 12,
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0,
       }
     : {};
 
@@ -1101,7 +1101,7 @@ const Overlay = () => {
             opacity: { duration: 0.2, ease: "easeOut" },
             y: { duration: 0.3, ease: "easeOut" },
           }}
-          className={`flex items-center z-[100000] dark:bg-[#010101] bg-white h-[44px] shrink-0 ${isNotch ? "pointer-events-none" : ""} ${!isPinned && !isNotch ? "cursor-move" : "cursor-default"}`}
+          className={`flex items-center z-[100000] ${isNotch ? "bg-transparent" : "dark:bg-[#010101] bg-white"} h-[44px] shrink-0 ${isNotch ? "pointer-events-none" : ""} ${!isPinned && !isNotch ? "cursor-move" : "cursor-default"}`}
           style={{ borderRadius: "12px" }}
           onMouseDown={handleDragMouseDown}
         >
@@ -1399,29 +1399,11 @@ const Overlay = () => {
               }}
               className="absolute inset-0 flex items-center justify-center px-2"
             >
-              <div className="flex items-center absolute left-2 top-1/2 -translate-y-1/2 scale-75">
+              <div className="flex items-center justify-center w-full h-full">
                 <RaeWatcher isActive={isActive} />
               </div>
 
-              {/* App information in notch - compact like Windows version */}
-              {windowName && notchWindowDisplayEnabled && isActive && (
-                <div className="flex items-center gap-1 text-white/95 absolute top-1/2 -translate-y-1/2 scale-75">
-                  {windowIcon ? (
-                    <img
-                      src={windowIcon}
-                      alt="App icon"
-                      className="w-5 h-5 rounded-sm"
-                    />
-                  ) : (
-                    <div className="w-5 h-5 bg-white/20 rounded-sm flex items-center justify-center">
-                      <span className="text-xs text-white/60">?</span>
-                    </div>
-                  )}
-                  <span className="text-xs font-medium max-w-[80px] truncate">
-                    {windowName}
-                  </span>
-                </div>
-              )}
+              {/* App information in notch - Hidden to show only RaeWatcher logo */}
             </motion.div>
           )}
         </AnimatePresence>

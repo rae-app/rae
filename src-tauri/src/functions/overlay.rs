@@ -31,17 +31,13 @@ pub fn force_top_center_magic_dot(app: AppHandle) {
                 let monitor_pos = monitor.position();
                 let screen_size = monitor.size();
 
-                // Position notch to the left of Mac's physical notch
-                // Mac's notch is ~230px wide and centered, so we position our notch just to its left
-                let center_x = monitor_pos.x + (screen_size.width as i32 / 2);
-                let mac_notch_half_width = 115; // Half of Mac's ~230px notch
-                let spacing = 10; // Small gap between our notch and Mac's notch
-                let left_of_notch_x =
-                    center_x - mac_notch_half_width - current_size.width as i32 - spacing;
+                // Position notch on left side of menu bar area
+                let left_margin = 950; // Position on left side where it was
+                let notch_x = monitor_pos.x + left_margin;
 
                 let target_pos = tauri::PhysicalPosition {
-                    x: left_of_notch_x.max(monitor_pos.x),
-                    y: monitor_pos.y,
+                    x: notch_x,
+                    y: monitor_pos.y, // At menu bar level
                 };
                 let _ = window.set_position(tauri::Position::Physical(target_pos));
             }
@@ -66,15 +62,12 @@ pub fn pin_magic_dot(app: AppHandle) {
                 let monitor_pos = monitor.position();
                 let screen_size = monitor.size();
 
-                // Position notch to the left of Mac's physical notch
-                let center_x = monitor_pos.x + (screen_size.width as i32 / 2);
-                let mac_notch_half_width = 115;
-                let spacing = 10;
-                let left_of_notch_x =
-                    center_x - mac_notch_half_width - current_size.width as i32 - spacing;
+                // Position notch on left side of menu bar area
+                let left_margin = 950;
+                let notch_x = monitor_pos.x + left_margin;
 
                 let target_pos = tauri::PhysicalPosition {
-                    x: left_of_notch_x.max(monitor_pos.x),
+                    x: notch_x,
                     y: monitor_pos.y,
                 };
                 // let _ = window.set_ignore_cursor_events(true);
