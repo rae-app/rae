@@ -40,7 +40,7 @@ const DEFAULT_CHAT = [480, 470];
 
 const EXPANDED_WIDTH = 248;
 
-const NOTCH_TIMEOUT = 2000;
+const NOTCH_TIMEOUT = 5000;
 
 // Constants for notch styling
 const NOTCH_SHADOW = `
@@ -133,6 +133,7 @@ const Overlay = () => {
   const [windowHwnd, setWindowHwnd] = useState<number | null>(null);
   const [isNotch, setIsNotch] = useState(false);
   const [inputActive, setInputActive] = useState(false);
+  const [initialShowComplete, setInitialShowComplete] = useState(false);
   // const [showApp, setShowApp] = useState(false)
 
   // Respect preference to stop analyzing after send
@@ -440,7 +441,7 @@ const Overlay = () => {
         notchTimeoutRef.current = null;
       }
     };
-  }, [isPinned, showChat, isNotch, inputActive]);
+  }, [isPinned, showChat, isNotch, inputActive, initialShowComplete]);
 
   const handleMouseEnter = () => {
     console.log(
@@ -539,6 +540,7 @@ const Overlay = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       isInitialShowRef.current = false;
+      setInitialShowComplete(true);
       console.log("Initial show complete - auto-collapse now enabled");
     }, 5000); // 5 seconds delay
 
