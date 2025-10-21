@@ -1262,7 +1262,7 @@ const Overlay = () => {
                     {listening ? (
                       <></>
                     ) : (
-                      <>{inputText || "Ask Rae anything... ;)"}</>
+                      <>{inputText || "Ask Rae anything..."}</>
                     )}
                   </span>
                 </div>
@@ -1325,7 +1325,7 @@ const Overlay = () => {
             {/* Hide voice and pin buttons in maximized state */}
             {!isMaximized && (
               <>
-                <OverlayButton
+                {/*<OverlayButton
                   onClick={() => {
                     console.log("🎛️ Toggling assist mode...", {
                       currentAssist: assist,
@@ -1346,14 +1346,14 @@ const Overlay = () => {
                         : "!text-orange-400 dark:!text-orange-300"
                       : ""
                   }
-                >
-                  {assist ? (
+                >*/}
+                {/*{assist ? (
                     <EarIcon weight="bold" size={16} />
                   ) : (
                     <EarSlashIcon weight="bold" size={16} />
-                  )}
-                  {/* <EarIcon weight={listening ? "fill" : "bold"} /> */}
-                </OverlayButton>
+                  )}*/}
+                {/* <EarIcon weight={listening ? "fill" : "bold"} /> */}
+                {/*</OverlayButton>*/}
                 {updateAvailable && (
                   <OverlayButton
                     onClick={() => {

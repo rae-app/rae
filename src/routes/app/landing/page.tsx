@@ -69,7 +69,7 @@ export default function Landing() {
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask Rae anything... gang"
+                  placeholder="Ask Rae anything..."
                   className="flex-1 bg-transparent outline-none text-sm px-3 py-3 placeholder:text-foreground/40"
                 />
                 <Button

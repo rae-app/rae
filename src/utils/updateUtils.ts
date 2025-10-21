@@ -23,8 +23,9 @@ export const useUpdateCheck = (): boolean => {
     checkUpdate();
 
     // Optional: check periodically, e.g., every hour
-    // const interval = setInterval(checkUpdate, 3600000);
-    // return () => clearInterval(interval);
+    const interval = setInterval(checkUpdate, 120000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return updateAvailable;
