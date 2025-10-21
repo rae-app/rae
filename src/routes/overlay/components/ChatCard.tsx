@@ -133,7 +133,8 @@ export const ChatView = ({
   >([]);
 
   // Helper to get the images to preview/send
-  const getImagesToSend = () => mediaUtils.getImagesToSend(attachedImages, isActive, windowScreenshot);
+  const getImagesToSend = () =>
+    mediaUtils.getImagesToSend(attachedImages, isActive, windowScreenshot);
   const [stealthMode, setStealthMode] = useState<boolean>(false);
   const [hoveredImageIndex, setHoveredImageIndex] = useState<number | null>(
     null,
@@ -402,14 +403,18 @@ export const ChatView = ({
     setAttachedFiles([]);
   };
 
-  const handlePaste = (e: React.ClipboardEvent) => mediaUtils.handlePasteImage(e, setAttachedImages);
+  const handlePaste = (e: React.ClipboardEvent) =>
+    mediaUtils.handlePasteImage(e, setAttachedImages);
 
   // Clear attached image
-  const clearImage = (idx: number) => mediaUtils.removeAttachedImage(setAttachedImages, idx);
+  const clearImage = (idx: number) =>
+    mediaUtils.removeAttachedImage(setAttachedImages, idx);
 
-  const handleFileSelect = async () => mediaUtils.openFileSelector(setAttachedFiles);
+  const handleFileSelect = async () =>
+    mediaUtils.openFileSelector(setAttachedFiles);
 
-  const clearFile = (idx: number) => mediaUtils.removeAttachedFile(setAttachedFiles, idx);
+  const clearFile = (idx: number) =>
+    mediaUtils.removeAttachedFile(setAttachedFiles, idx);
 
   const getPlaceholderText = () => {
     if (attachedImages.length > 0) {
@@ -427,7 +432,7 @@ export const ChatView = ({
       case 4:
         return "Generate or modify image...";
       default:
-        return "Enter your message or paste a screenshot";
+        return "Enter your message";
     }
   };
 
@@ -745,7 +750,10 @@ export const ChatView = ({
                 </div>
               </div>
             </div>
-            <OverlayMaximized currentPage={currentPage} isMaximized={isMaximized} />
+            <OverlayMaximized
+              currentPage={currentPage}
+              isMaximized={isMaximized}
+            />
           </>
         ) : (
           <>
@@ -879,7 +887,9 @@ export const ChatView = ({
                           <div className="space-y-3">
                             {(() => {
                               try {
-                                return <MarkdownRenderer source={msg.text || ""} />;
+                                return (
+                                  <MarkdownRenderer source={msg.text || ""} />
+                                );
                               } catch (error) {
                                 console.error("Markdown render error:", error);
                                 return (
