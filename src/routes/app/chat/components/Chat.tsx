@@ -35,7 +35,7 @@ const createMessageHandler = (
   onSend?: (msg: string, images?: string[], files?: any[]) => void,
   onWebSearch?: (msg: string, images?: string[], files?: any[]) => void,
   onSupermemory?: (msg: string, images?: string[], files?: any[]) => void,
-  onImageGeneration?: (msg: string, images?: string[], files?: any[]) => void
+  onImageGeneration?: (msg: string, images?: string[], files?: any[]) => void,
 ) => {
   const resetInputs = () => {
     setMessage("");
@@ -47,8 +47,11 @@ const createMessageHandler = (
   const handleSend = () => {
     if (!message.trim()) return;
     if (onSend) {
-      onSend(message, attachedImages.length > 0 ? attachedImages.slice(0, 3) : undefined,
-             attachedFiles.length > 0 ? attachedFiles : undefined);
+      onSend(
+        message,
+        attachedImages.length > 0 ? attachedImages.slice(0, 3) : undefined,
+        attachedFiles.length > 0 ? attachedFiles : undefined,
+      );
     }
     resetInputs();
   };
@@ -56,8 +59,11 @@ const createMessageHandler = (
   const handleWebSearch = () => {
     if (!message.trim()) return;
     if (onWebSearch) {
-      onWebSearch(message, attachedImages.length > 0 ? attachedImages.slice(0, 3) : undefined,
-                  attachedFiles.length > 0 ? attachedFiles : undefined);
+      onWebSearch(
+        message,
+        attachedImages.length > 0 ? attachedImages.slice(0, 3) : undefined,
+        attachedFiles.length > 0 ? attachedFiles : undefined,
+      );
     }
     resetInputs();
   };
@@ -66,8 +72,11 @@ const createMessageHandler = (
     if (!message.trim()) return;
     if (!init && setInit) setInit(true);
     if (onSupermemory) {
-      onSupermemory(message, attachedImages.length > 0 ? attachedImages.slice(0, 3) : undefined,
-                     attachedFiles.length > 0 ? attachedFiles : undefined);
+      onSupermemory(
+        message,
+        attachedImages.length > 0 ? attachedImages.slice(0, 3) : undefined,
+        attachedFiles.length > 0 ? attachedFiles : undefined,
+      );
     }
     resetInputs();
   };
@@ -75,8 +84,11 @@ const createMessageHandler = (
   const handleImageGeneration = () => {
     if (!message.trim()) return;
     if (onImageGeneration) {
-      onImageGeneration(message, attachedImages.length > 0 ? attachedImages.slice(0, 3) : undefined,
-                        attachedFiles.length > 0 ? attachedFiles : undefined);
+      onImageGeneration(
+        message,
+        attachedImages.length > 0 ? attachedImages.slice(0, 3) : undefined,
+        attachedFiles.length > 0 ? attachedFiles : undefined,
+      );
     }
     resetInputs();
   };
@@ -98,13 +110,13 @@ const createMessageHandler = (
     handleWebSearch,
     handleSupermemory,
     handleImageGeneration,
-    handleSendMessage
+    handleSendMessage,
   };
 };
 
 // File Manager - handles file operations
 const createFileManager = (
-  setAttachedFiles: React.Dispatch<React.SetStateAction<any[]>>
+  setAttachedFiles: React.Dispatch<React.SetStateAction<any[]>>,
 ) => {
   const clearFile = (idx: number) => {
     setAttachedFiles((prev) => prev.filter((_, i) => i !== idx));
@@ -191,14 +203,14 @@ const createFileManager = (
 
   return {
     clearFile,
-    handleFileSelect
+    handleFileSelect,
   };
 };
 
 // Image Manager - handles image operations
 const createImageManager = (
   setAttachedImages: React.Dispatch<React.SetStateAction<string[]>>,
-  onReferenceImage?: (imageBase64: string) => void
+  onReferenceImage?: (imageBase64: string) => void,
 ) => {
   const clearImage = (idx?: number) => {
     if (typeof idx === "number") {
@@ -241,7 +253,7 @@ const createImageManager = (
   return {
     clearImage,
     handlePaste,
-    handleReferenceImage
+    handleReferenceImage,
   };
 };
 
@@ -254,7 +266,7 @@ const createUIStateManager = (
   setIsTyping: (typing: boolean) => void,
   setToolsDropdownOpen: (open: boolean) => void,
   onTypingChange?: (typing: boolean) => void,
-  onMessageChange?: (message: string) => void
+  onMessageChange?: (message: string) => void,
 ) => {
   const handleInputChange = (value: string) => {
     setDisabled(value.trim() === "");
@@ -283,13 +295,13 @@ const createUIStateManager = (
       case 4:
         return "Generate or modify image...";
       default:
-        return "Enter your message or paste a screenshot";
+        return "Enter your message ";
     }
   };
 
   return {
     handleInputChange,
-    getPlaceholderText
+    getPlaceholderText,
   };
 };
 // OpenAI logo SVG as a data URL
@@ -316,10 +328,50 @@ const defaultModels = [
 
 interface ChatProps {
   name: string;
-  onSend?: (msg: string, images?: string[], files?: { name: string; type: string; size: number; content: string; textContent?: string }[]) => void;
-  onWebSearch?: (msg: string, images?: string[], files?: { name: string; type: string; size: number; content: string; textContent?: string }[]) => void;
-  onSupermemory?: (msg: string, images?: string[], files?: { name: string; type: string; size: number; content: string; textContent?: string }[]) => void;
-  onImageGeneration?: (msg: string, images?: string[], files?: { name: string; type: string; size: number; content: string; textContent?: string }[]) => void;
+  onSend?: (
+    msg: string,
+    images?: string[],
+    files?: {
+      name: string;
+      type: string;
+      size: number;
+      content: string;
+      textContent?: string;
+    }[],
+  ) => void;
+  onWebSearch?: (
+    msg: string,
+    images?: string[],
+    files?: {
+      name: string;
+      type: string;
+      size: number;
+      content: string;
+      textContent?: string;
+    }[],
+  ) => void;
+  onSupermemory?: (
+    msg: string,
+    images?: string[],
+    files?: {
+      name: string;
+      type: string;
+      size: number;
+      content: string;
+      textContent?: string;
+    }[],
+  ) => void;
+  onImageGeneration?: (
+    msg: string,
+    images?: string[],
+    files?: {
+      name: string;
+      type: string;
+      size: number;
+      content: string;
+      textContent?: string;
+    }[],
+  ) => void;
   currentModel?: { label: string; value: string };
   setCurrentModel?: (model: { label: string; value: string }) => void;
   models?: { label: string; value: string }[];
@@ -387,7 +439,7 @@ const Chat: React.FC<ChatProps> = ({
     onSend,
     onWebSearch,
     onSupermemory,
-    onImageGeneration
+    onImageGeneration,
   );
 
   const fileManager = createFileManager(setAttachedFiles);
@@ -400,7 +452,7 @@ const Chat: React.FC<ChatProps> = ({
     setIsTyping,
     setToolsDropdownOpen,
     onTypingChange,
-    onMessageChange
+    onMessageChange,
   );
 
   // Close tools dropdown when clicking outside
@@ -451,8 +503,6 @@ const Chat: React.FC<ChatProps> = ({
     }
   }, [initialMessage]);
 
-
-
   // Handle image reference event from parent
   useEffect(() => {
     const handleReferenceImage = (event: CustomEvent) => {
@@ -476,7 +526,8 @@ const Chat: React.FC<ChatProps> = ({
     };
   }, []);
 
-  const getPlaceholderText = () => uiStateManager.getPlaceholderText(selectedTool);
+  const getPlaceholderText = () =>
+    uiStateManager.getPlaceholderText(selectedTool);
 
   const handleReferenceImage = (imageBase64: string) => {
     imageManager.handleReferenceImage(imageBase64);
@@ -854,7 +905,7 @@ const Chat: React.FC<ChatProps> = ({
                     placeholder={
                       attachedImages.length > 0
                         ? "Describe what you want to know about these images..."
-                        : "Enter your message or paste a screenshot"
+                        : "Enter your message"
                     }
                     name=""
                     id=""
