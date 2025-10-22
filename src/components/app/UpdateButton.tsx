@@ -91,8 +91,8 @@ export const UpdateButton = ({
       className={`w-full shrink-0 group h-[44px] flex items-center overflow-hidden rounded-lg cursor-pointer flex-nowrap whitespace-nowrap font-medium duration-100 relative ${
         updateAvailable && expanded
           ? "dark:bg-red-500/90 dark:text-white dark:hover:bg-red-600 animate-pulse"
-          : `dark:bg-zinc-800/20 dark:hover:text-white dark:hover:bg-zinc-800 transition-colors dark:text-zinc-400 ${
-              active && "dark:!bg-zinc-800 dark:!text-white"
+          : `dark:bg-stone-800/20 dark:hover:text-white dark:hover:bg-stone-800 transition-colors dark:text-stone-400 ${
+              active && "dark:!bg-stone-800 dark:!text-white"
             }`
       } ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
     >

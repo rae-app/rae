@@ -14,7 +14,7 @@ const Option = ({ icon, children, active, onClick }: OptionProps) => {
   return (
     <button
       onClick={onClick}
-      className={`flex gap-2 text-sm w-full transition-colors duration-100 px-2 py-1 dark:text-zinc-400 font-medium hover:dark:text-white hover:dark:bg-zinc-900 ${
+      className={`flex gap-2 text-sm w-full transition-colors duration-100 px-2 py-1 dark:text-stone-400 font-medium hover:dark:text-white hover:dark:bg-stone-900 ${
         active && "dark:!bg-surface dark:!text-white"
       } rounded-md items-center`}
     >

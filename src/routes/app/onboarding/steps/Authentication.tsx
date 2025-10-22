@@ -72,7 +72,7 @@ const Auth: React.FC<{ onNext: (step: string) => void }> = ({ onNext }) => {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="no-drag w-full px-4 py-3 border-2 dark:border-zinc-600 focus:dark:border-surface/80 rounded-lg  text-sm outline-none"
+          className="no-drag w-full px-4 py-3 border-2 dark:border-stone-600 focus:dark:border-surface/80 rounded-lg  text-sm outline-none"
         />
 
         <input
@@ -80,7 +80,7 @@ const Auth: React.FC<{ onNext: (step: string) => void }> = ({ onNext }) => {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="no-drag  w-full px-4 py-3 border-2 dark:border-zinc-600 focus:dark:border-surface/80 rounded-lg  text-sm outline-none"
+          className="no-drag  w-full px-4 py-3 border-2 dark:border-stone-600 focus:dark:border-surface/80 rounded-lg  text-sm outline-none"
         />
 
         {!isLogin && (
@@ -100,11 +100,17 @@ const Auth: React.FC<{ onNext: (step: string) => void }> = ({ onNext }) => {
           className="w-full dark:bg-surface hover:dark:bg-surface/80"
           // className="no-drag w-full flex justify-center items-center mb-2 py-3 rounded-full bg-black text-white font-medium cursor-pointer hover:scale-105 transition-all duration-300"
         >
-          {loading ? <div className="w-full flex items-center justify-center " ><Loader className="animate-spin"  /></div> : "Continue"}
+          {loading ? (
+            <div className="w-full flex items-center justify-center ">
+              <Loader className="animate-spin" />
+            </div>
+          ) : (
+            "Continue"
+          )}
         </Button>
 
         <Button
-        variant="outline"
+          variant="outline"
           onClick={() => {
             setError("");
             setIsLogin(!isLogin);

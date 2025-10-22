@@ -23,17 +23,20 @@ export default function ShortcutsPage(): JSX.Element {
       <div className="mx-auto max-w-3xl p-6 space-y-6">
         <header className="space-y-1">
           <div className="text-2xl font-semibold tracking-tight">Shortcuts</div>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-stone-500">
             Quick actions to speed up your workflow.
           </p>
         </header>
         <Card>
           <SectionHeader title={"Shortcuts"} />
           <div className="flex flex-col divide-y divide-border">
-            <div className="px-5 py-4 flex gap-4 items-center text-surface"><LightbulbIcon weight="fill" className="text-xl" />@rae brings the overlay to you</div>
+            <div className="px-5 py-4 flex gap-4 items-center text-surface">
+              <LightbulbIcon weight="fill" className="text-xl" />
+              @rae brings the overlay to you
+            </div>
             {shortcuts.map((shortcut) => {
               return (
-                <div className="divide-y divide-zinc-200">
+                <div className="divide-y divide-stone-200">
                   <ShortcutRow
                     keys={shortcut.combo}
                     label={shortcut.title}
@@ -42,7 +45,6 @@ export default function ShortcutsPage(): JSX.Element {
                 </div>
               );
             })}
-            
           </div>
         </Card>
         {/* Automation toggles moved to Preferences page */}
@@ -65,7 +67,7 @@ function ShortcutRow({
       <div className="flex flex-col">
         <span className="text-sm font-medium text-foreground">{label}</span>
         {subLabel ? (
-          <span className="text-xs text-zinc-500">{subLabel}</span>
+          <span className="text-xs text-stone-500">{subLabel}</span>
         ) : null}
       </div>
       <KeyCombo keys={keys} />
@@ -76,7 +78,7 @@ function ShortcutRow({
 function SectionHeader({ title }: { title: string }) {
   return (
     <div className="px-5 py-2.5  border-b border-border">
-      <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+      <span className="text-xs font-medium uppercase tracking-wide text-stone-500">
         {title}
       </span>
     </div>
@@ -100,7 +102,7 @@ function KeyCombo({ keys }: { keys: string[] }) {
             {k}
           </kbd>
           {idx < keys.length - 1 ? (
-            <span className="text-zinc-400 text-xs font-medium">+</span>
+            <span className="text-stone-400 text-xs font-medium">+</span>
           ) : null}
         </div>
       ))}
@@ -119,18 +121,18 @@ function ToggleRow({
 }) {
   return (
     <div className="flex items-center justify-between p-2">
-      <span className="text-sm text-zinc-800 font-medium">{label}</span>
+      <span className="text-sm text-stone-800 font-medium">{label}</span>
       <button
         type="button"
         onClick={() => onToggle(!enabled)}
-        className={`relative inline-flex h-5 w-10 outline outline-zinc-300  items-center rounded-sm transition-colors overflow-hidden ${
-          enabled ? "bg-zinc-950" : "bg-zinc-400 hover:bg-zinc-500 "
+        className={`relative inline-flex h-5 w-10 outline outline-stone-300  items-center rounded-sm transition-colors overflow-hidden ${
+          enabled ? "bg-stone-950" : "bg-stone-400 hover:bg-stone-500 "
         }`}
         aria-pressed={enabled}
       >
         <motion.div
           animate={{ x: enabled ? "100%" : "0%" }}
-          className="absolute rounded-sm z-50 left-0 h-full aspect-square bg-white flex items-center justify-center leading-0 text-center text-zinc-400"
+          className="absolute rounded-sm z-50 left-0 h-full aspect-square bg-white flex items-center justify-center leading-0 text-center text-stone-400"
         ></motion.div>
       </button>
     </div>

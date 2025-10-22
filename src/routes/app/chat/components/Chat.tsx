@@ -571,7 +571,7 @@ const Chat: React.FC<ChatProps> = ({
           <>
             <motion.div
               animate={{ opacity: 1 }}
-              className="text-3xl text-zinc-200 font-semibold"
+              className="text-3xl text-stone-200 font-semibold"
             >
               Welcome Back {name?.split(" ")[0]}
             </motion.div>
@@ -584,7 +584,7 @@ const Chat: React.FC<ChatProps> = ({
               className=" pointer-events-auto flex gap-2 relative"
             >
               <div className="w-full">
-                <div className="bg-zinc-900/50 w-full h-fit border flex flex-col transition-all rounded-lg border-border group focus-within:border-foreground/20 ">
+                <div className="bg-stone-900/50 w-full h-fit border flex flex-col transition-all rounded-lg border-border group focus-within:border-foreground/20 ">
                   <div className="relative">
                     {/* Tool indicator */}
                     <AnimatePresence>
@@ -668,13 +668,13 @@ const Chat: React.FC<ChatProps> = ({
                               <div
                                 key={idx}
                                 onClick={() => clearFile(idx)}
-                                className="relative group h-[60px] w-[120px] border-2 border-border hover:border-red-500/40 group transition-colors cursor-pointer overflow-hidden rounded-sm flex items-center justify-center bg-zinc-100 dark:bg-zinc-800"
+                                className="relative group h-[60px] w-[120px] border-2 border-border hover:border-red-500/40 group transition-colors cursor-pointer overflow-hidden rounded-sm flex items-center justify-center bg-stone-100 dark:bg-stone-800"
                               >
                                 <div className="flex flex-col items-center justify-center p-2 text-xs">
                                   <div className="font-medium truncate w-full text-center">
                                     {file.name}
                                   </div>
-                                  <div className="text-zinc-500 text-[10px]">
+                                  <div className="text-stone-500 text-[10px]">
                                     {(file.size / 1024).toFixed(1)}KB
                                   </div>
                                 </div>
@@ -872,8 +872,8 @@ const Chat: React.FC<ChatProps> = ({
                     >
                       <button
                         disabled={disabled}
-                        className={`rounded-lg size-full dark:bg-zinc-800 dark:hover:bg-zinc-700 transition-colors duration-100 p-0 flex items-center justify-center ${
-                          disabled && "dark:bg-zinc-800  !text-foreground/20"
+                        className={`rounded-lg size-full dark:bg-stone-800 dark:hover:bg-stone-700 transition-colors duration-100 p-0 flex items-center justify-center ${
+                          disabled && "dark:bg-stone-800  !text-foreground/20"
                         }`}
                         onClick={handleSendMessage}
                       >
@@ -894,7 +894,7 @@ const Chat: React.FC<ChatProps> = ({
               // exit={{ width: "70%", height: "100px" }}
               className=" pointer-events-auto flex gap-2 relative"
             >
-              <div className="bg-zinc-900/50 w-full h-full border flex flex-col transition-all rounded-lg border-border group focus-within:border-foreground/20 ">
+              <div className="bg-stone-900/50 w-full h-full border flex flex-col transition-all rounded-lg border-border group focus-within:border-foreground/20 ">
                 <div className="relative h-full">
                   <textarea
                     onChange={() =>
@@ -964,13 +964,13 @@ const Chat: React.FC<ChatProps> = ({
                           <div
                             key={idx}
                             onClick={() => clearFile(idx)}
-                            className="relative group h-[60px] w-[120px] border-2 border-border hover:border-red-500/40 group transition-colors cursor-pointer overflow-hidden rounded-sm flex items-center justify-center bg-zinc-100 dark:bg-zinc-800"
+                            className="relative group h-[60px] w-[120px] border-2 border-border hover:border-red-500/40 group transition-colors cursor-pointer overflow-hidden rounded-sm flex items-center justify-center bg-stone-100 dark:bg-stone-800"
                           >
                             <div className="flex flex-col items-center justify-center p-2 text-xs">
                               <div className="font-medium truncate w-full text-center">
                                 {file.name}
                               </div>
-                              <div className="text-zinc-500 text-[10px]">
+                              <div className="text-stone-500 text-[10px]">
                                 {(file.size / 1024).toFixed(1)}KB
                               </div>
                             </div>
@@ -1141,8 +1141,8 @@ const Chat: React.FC<ChatProps> = ({
                   >
                     <button
                       disabled={disabled}
-                      className={`rounded-lg size-full dark:bg-zinc-800 dark:hover:bg-zinc-700 transition-colors duration-100 p-0 flex items-center justify-center ${
-                        disabled && "dark:bg-zinc-800  !text-foreground/20"
+                      className={`rounded-lg size-full dark:bg-stone-800 dark:hover:bg-stone-700 transition-colors duration-100 p-0 flex items-center justify-center ${
+                        disabled && "dark:bg-stone-800  !text-foreground/20"
                       }`}
                       onClick={messageHandler.handleSend}
                     >

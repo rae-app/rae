@@ -82,7 +82,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
               duration: 0.2,
               ease: "circInOut",
             }}
-            className={`dark:bg-zinc-950 z-40 overflow-hidden rounded-lg shadow-xl shadow-black/40 absolute flex flex-col border border-border ${getPositionClasses()} ${className}`}
+            className={`dark:bg-stone-950 z-40 overflow-hidden rounded-lg shadow-xl shadow-black/40 absolute flex flex-col border border-border ${getPositionClasses()} ${className}`}
           >
             <div
               onClick={(e) => e.stopPropagation()}
@@ -95,7 +95,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                     option.onClick?.();
                     onClose();
                   }}
-                  className={`flex gap-2 text-sm w-full transition-colors duration-100 px-2 py-1 dark:text-zinc-400 font-medium hover:dark:text-white hover:dark:bg-zinc-900 ${
+                  className={`flex gap-2 text-sm w-full transition-colors duration-100 px-2 py-1 dark:text-stone-400 font-medium hover:dark:text-white hover:dark:bg-stone-900 ${
                     option.active && "dark:!bg-surface dark:!text-white"
                   } rounded-md items-center`}
                 >
@@ -133,15 +133,15 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.98 }}
           transition={{ duration: 0.12, ease: "easeInOut" }}
-          className={`absolute z-40 overflow-hidden rounded-lg shadow-xl shadow-black/40 dark:bg-zinc-950 border border-border ${getPositionClasses()} ${className}`}
+          className={`absolute z-40 overflow-hidden rounded-lg shadow-xl shadow-black/40 dark:bg-stone-950 border border-border ${getPositionClasses()} ${className}`}
           style={{ minWidth }}
         >
           <div className="flex flex-col py-1">
             {options.map((option, index) => (
               <button
                 key={option.value || index}
-                className={`h-9 text-left px-3 text-sm transition-colors whitespace-nowrap dark:text-zinc-300 hover:dark:text-white hover:dark:bg-zinc-900 ${
-                  option.active ? "font-semibold dark:bg-zinc-900" : ""
+                className={`h-9 text-left px-3 text-sm transition-colors whitespace-nowrap dark:text-stone-300 hover:dark:text-white hover:dark:bg-stone-900 ${
+                  option.active ? "font-semibold dark:bg-stone-900" : ""
                 }`}
                 onClick={() => {
                   option.onClick?.();

@@ -68,7 +68,7 @@ const RaeWatcher = ({ isActive }: { isActive: boolean }) => {
           x: { type: "spring", stiffness: 120, damping: 20 },
           y: { type: "spring", stiffness: 120, damping: 20 },
         }}
-        className={`size-[20px] border-2 ring-2 ${isActive ? "border-surface ring-surface/20" : "border-zinc-600 ring-zinc-800"} rounded-full`}
+        className={`size-[20px] border-2 ring-2 ${isActive ? "border-surface ring-surface/20" : "border-stone-600 ring-stone-800"} rounded-full`}
       />
     </div>
   );

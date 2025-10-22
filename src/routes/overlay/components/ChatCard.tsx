@@ -67,6 +67,7 @@ interface ChatViewProps {
 }
 
 import CustomDropdown, { DropdownOption } from "./CustomDropdown";
+import { set } from "zod";
 
 export const ChatView = ({
   onClose,
@@ -710,6 +711,7 @@ export const ChatView = ({
     <motion.div
       onClick={() => {
         setOptionsOpen(false);
+        setDropdownOpen(false);
       }}
       initial={{ opacity: 1, y: "-100%" }}
       animate={{ opacity: 1, y: "0%" }}
@@ -763,7 +765,7 @@ export const ChatView = ({
                 isMaximized ? "w-[600px] mx-auto" : "w-full"
               }`}
             >
-              <div className="h-full w-full flex items-center p-2 tracking-tight font-medium">
+              <div className="h-full w-full flex items-center p-1 tracking-tight font-medium">
                 {/* Title section with fixed max width */}
                 <div className="flex items-center gap-2 min-w-0 max-w-[60%]">
                   <div className="flex items-center gap-2 text-foreground min-w-0 flex-1">
@@ -818,8 +820,8 @@ export const ChatView = ({
                 </div>
 
                 {/* Time and controls section */}
-                <div className="flex items-center gap-2 ml-auto">
-                  <div className="text-zinc-600 text-sm font-medium shrink-0">
+                <div className="flex h-[36px] items-center gap-2 ml-auto">
+                  <div className="text-stone-600 text-sm font-medium shrink-0">
                     {getCurrentTime().toUpperCase()}
                   </div>
                   <OverlayButton onClick={handleNewChat} title="New Chat">
@@ -850,7 +852,7 @@ export const ChatView = ({
             <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-hide relative flex flex-col">
               {loadingMessages && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
-                  <Loader2 className="animate-spin text-zinc-700" size={24} />
+                  <Loader2 className="animate-spin text-stone-700" size={24} />
                 </div>
               )}
               {/* Assist message when assist mode is active */}
@@ -878,12 +880,12 @@ export const ChatView = ({
                     <div
                       className={`max-w-[85%] ${
                         msg.sender === "user"
-                          ? "bg-zinc-800 dark:bg-stone-900 text-white rounded-lg rounded-br-md px-3 py-2"
+                          ? "bg-stone-800 dark:bg-stone-900 text-white rounded-lg rounded-br-md px-3 py-2"
                           : "bg-transparent text-foreground"
                       }`}
                     >
                       {msg.sender === "ai" ? (
-                        <div className="prose prose-base max-w-none text-foreground dark:text-zinc-100 leading-relaxed px-3 py-2">
+                        <div className="prose prose-base max-w-none text-foreground dark:text-stone-100 leading-relaxed px-3 py-2">
                           <div className="space-y-3">
                             {(() => {
                               try {
@@ -977,20 +979,20 @@ export const ChatView = ({
                       {/* Show attached files if exist */}
                       {msg.files && msg.files.length > 0 && (
                         <div className="mt-2 flex flex-col gap-2">
-                          <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                          <div className="text-xs text-stone-500 dark:text-stone-400 font-medium">
                             Attached files:
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {msg.files.map((file: any, fileIdx: number) => (
                               <div
                                 key={fileIdx}
-                                className="flex items-center gap-2 px-3 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700"
+                                className="flex items-center gap-2 px-3 py-2 bg-stone-100 dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700"
                               >
                                 <div className="flex flex-col">
                                   <div className="text-sm font-medium truncate max-w-[150px]">
                                     {file.name}
                                   </div>
-                                  <div className="text-xs text-zinc-500">
+                                  <div className="text-xs text-stone-500">
                                     {(file.size / 1024).toFixed(1)}KB •{" "}
                                     {file.type}
                                   </div>
@@ -1010,11 +1012,11 @@ export const ChatView = ({
                 <div className="w-full flex mb-4">
                   <div className="flex w-full justify-start">
                     <div className="max-w-[85%] bg-transparent text-foreground">
-                      <div className="prose prose-base max-w-none text-foreground dark:text-zinc-100 leading-relaxed">
+                      <div className="prose prose-base max-w-none text-foreground dark:text-stone-100 leading-relaxed">
                         <div className="space-y-3">
                           <MarkdownRenderer source={streamingMsg} />
                           {/* Streaming cursor */}
-                          <span className="inline-block w-2 h-5 bg-zinc-600 dark:bg-zinc-400 animate-pulse ml-1" />
+                          <span className="inline-block w-2 h-5 bg-stone-600 dark:bg-stone-400 animate-pulse ml-1" />
                         </div>
                       </div>
                     </div>
@@ -1033,7 +1035,7 @@ export const ChatView = ({
               <AnimatePresence mode="popLayout">
                 {isImageGenerating && streamingMsg.length === 0 && (
                   <motion.div
-                    className="flex gap-2 mt-2 mx-2 dark:text-zinc-200  font-medium items-center text-sm h-fit"
+                    className="flex gap-2 mt-2 mx-2 dark:text-stone-200  font-medium items-center text-sm h-fit"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.2 }}
@@ -1065,7 +1067,7 @@ export const ChatView = ({
                   !isImageGenerating &&
                   streamingMsg.length === 0 && (
                     <motion.div
-                      className="flex gap-2 mt-2 mx-2 dark:text-zinc-200  font-medium items-center text-sm h-fit"
+                      className="flex gap-2 mt-2 mx-2 dark:text-stone-200  font-medium items-center text-sm h-fit"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.2 }}
@@ -1163,13 +1165,13 @@ export const ChatView = ({
                           <div
                             key={idx}
                             onClick={() => clearFile(idx)}
-                            className="relative group h-[60px] w-[120px] border-2 border-border hover:border-surface/40 group transition-colors cursor-pointer overflow-hidden rounded-sm flex items-center justify-center bg-zinc-100 dark:bg-zinc-800"
+                            className="relative group h-[60px] w-[120px] border-2 border-border hover:border-surface/40 group transition-colors cursor-pointer overflow-hidden rounded-sm flex items-center justify-center bg-stone-100 dark:bg-stone-800"
                           >
                             <div className="flex flex-col items-center justify-center p-2 text-xs">
                               <div className="font-medium truncate w-full text-center">
                                 {file.name}
                               </div>
-                              <div className="text-zinc-500 text-[10px]">
+                              <div className="text-stone-500 text-[10px]">
                                 {(file.size / 1024).toFixed(1)}KB
                               </div>
                             </div>
@@ -1188,8 +1190,9 @@ export const ChatView = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       setDropdownOpen((v) => !v);
+                      setOptionsOpen(false);
                     }}
-                    className="dark:bg-zinc-950"
+                    className="dark:bg-stone-950"
                     title={currentModel.value}
                   >
                     <img
@@ -1224,7 +1227,10 @@ export const ChatView = ({
                 <div className="h-full w-fit relative  flex items-center p-1 ">
                   <CustomDropdown
                     isOpen={optionsOpen}
-                    onClose={() => setOptionsOpen(false)}
+                    onClose={() => {
+                      setOptionsOpen(false);
+                      setDropdownOpen(false);
+                    }}
                     options={[
                       {
                         label: "Web Search",
@@ -1284,15 +1290,16 @@ export const ChatView = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       setOptionsOpen((v) => !v);
+                      setDropdownOpen(false);
                     }}
-                    className="dark:bg-zinc-950"
+                    className="dark:bg-stone-950"
                     title="Options"
                   >
                     <SlidersHorizontalIcon weight="bold" />
                   </OverlayButton>
                 </div>
                 <div className="w-full h-full py-1 relative">
-                  <div className="relative  size-full dark:bg-zinc-950 focus-within:dark:bg-zinc-950 rounded-lg transition-all duration-100 border-2 dark:border-zinc-950 focus-within:dark:border-zinc-900">
+                  <div className="relative  size-full dark:bg-stone-950 focus-within:dark:bg-stone-950 rounded-lg transition-all duration-100 border-2 dark:border-stone-950 focus-within:dark:border-stone-900">
                     {/* Tool indicator */}
                     <AnimatePresence>
                       {selectedTool > 0 && (
@@ -1326,7 +1333,7 @@ export const ChatView = ({
                           handleSendMessage();
                       }}
                       placeholder={getPlaceholderText()}
-                      className={`w-full dark:focus:placeholder:text-zinc-400/0 placeholder:transition-colors h-full bg-transparent text-foreground placeholder:text-foreground/50 text-sm outline-none pr-12 ${selectedTool > 0 ? "pl-12" : "px-4"}`}
+                      className={`w-full dark:focus:placeholder:text-stone-400/0 placeholder:transition-colors h-full bg-transparent text-foreground placeholder:text-foreground/50 text-sm outline-none pr-12 ${selectedTool > 0 ? "pl-12" : "px-4"}`}
                     />
 
                     {/* Image attachment indicator */}
@@ -1335,7 +1342,7 @@ export const ChatView = ({
                 <div className="h-full w-fit  flex items-center p-1 ">
                   <OverlayButton
                     onClick={handleFileSelect}
-                    className="dark:bg-zinc-950"
+                    className="dark:bg-stone-950"
                     title="Attach file"
                   >
                     <Plus size={16} />
@@ -1344,7 +1351,7 @@ export const ChatView = ({
                 <div className="h-full w-fit  flex items-center p-1 ">
                   <OverlayButton
                     onClick={handleSendMessage}
-                    className="dark:bg-zinc-950"
+                    className="dark:bg-stone-950"
                     title="Send message"
                   >
                     <ArrowElbowDownLeftIcon weight="bold" />

@@ -90,7 +90,7 @@ export const WebSearchAnimation = ({
   return (
     <AnimatePresence mode="popLayout">
       <motion.div
-        className="flex flex-col gap-3 mt-2 mx-2 dark:text-zinc-200 font-medium items-start text-sm h-fit"
+        className="flex flex-col gap-3 mt-2 mx-2 dark:text-stone-200 font-medium items-start text-sm h-fit"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -153,7 +153,7 @@ export const WebSearchAnimation = ({
                                 : 0,
                             repeatType: "loop",
                           }}
-                          className="size-5 flex items-center justify-center rounded-sm overflow-hidden border border-zinc-600/20"
+                          className="size-5 flex items-center justify-center rounded-sm overflow-hidden border border-stone-600/20"
                         >
                           <img
                             src={site.favicon}
@@ -185,7 +185,7 @@ export const WebSearchAnimation = ({
                   exit={{ opacity: 0, y: 10 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <span className="text-zinc-400">
+                  <span className="text-stone-400">
                     Searching {realSearchSites[currentSiteIndex].site}...
                   </span>
                 </motion.div>

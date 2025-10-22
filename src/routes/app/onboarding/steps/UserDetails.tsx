@@ -52,7 +52,7 @@ const Name: React.FC<NameProps> = ({ onNext }) => {
           placeholder="Your name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="no-drag w-full px-4 py-3 border-2 dark:border-zinc-600 focus:dark:border-surface/80 rounded-lg  text-sm outline-none mb-2"
+          className="no-drag w-full px-4 py-3 border-2 dark:border-stone-600 focus:dark:border-surface/80 rounded-lg  text-sm outline-none mb-2"
         />
         {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
         <Button
@@ -60,7 +60,13 @@ const Name: React.FC<NameProps> = ({ onNext }) => {
           className="w-full"
           // className="no-drag w-full py-2 rounded-xl bg-black flex justify-center items-center text-white font-medium shadow-md hover:scale-105 transition"
         >
-          {loading ? <div className="w-full flex items-center justify-center " ><Loader className="animate-spin"  /></div> : "Continue"}
+          {loading ? (
+            <div className="w-full flex items-center justify-center ">
+              <Loader className="animate-spin" />
+            </div>
+          ) : (
+            "Continue"
+          )}
         </Button>
       </div>
     </div>

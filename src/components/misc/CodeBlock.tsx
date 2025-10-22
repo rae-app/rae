@@ -1,8 +1,10 @@
-{/*
+{
+  /*
   This is the code block component.
-  It is used to display code blocks 
+  It is used to display code blocks
   Response from ai related to any programming question will be highlighted
-*/}
+*/
+}
 
 import React, { useState } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -41,7 +43,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
   // For inline code, return simple styled span
   if (inline) {
     return (
-      <code className="bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-1.5 py-0.5 rounded text-sm font-mono border border-zinc-300 dark:border-zinc-700">
+      <code className="bg-stone-200 dark:bg-stone-800 text-stone-800 dark:text-stone-200 px-1.5 py-0.5 rounded text-sm font-mono border border-stone-300 dark:border-stone-700">
         {children}
       </code>
     );
@@ -49,9 +51,9 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
 
   // For code blocks, return syntax highlighted version with copy button
   return (
-    <div className="relative group my-4 w-full border border-zinc-300 dark:border-zinc-700 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
-      <div className="flex items-center justify-between bg-zinc-100 dark:bg-zinc-800 px-4 py-2 border-b border-zinc-300 dark:border-zinc-700">
-        <span className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+    <div className="relative group my-4 w-full border border-stone-300 dark:border-stone-700 rounded-lg overflow-hidden bg-white dark:bg-stone-900">
+      <div className="flex items-center justify-between bg-stone-100 dark:bg-stone-800 px-4 py-2 border-b border-stone-300 dark:border-stone-700">
+        <span className="text-stone-700 dark:text-stone-300 text-sm font-medium">
           {language !== "text" ? language : "code"}
         </span>
         <button
@@ -59,7 +61,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
           className={`p-1.5 rounded transition-all duration-200 ${
             copied
               ? "bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-700"
-              : "bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 text-zinc-600 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
+              : "bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600 text-stone-600 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300"
           }`}
           title={copied ? "Copied!" : "Copy code"}
         >
@@ -82,7 +84,8 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
           codeTagProps={{
             style: {
               fontSize: "14px",
-              fontFamily: "ui-monospace, SFMono-Regular, 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', monospace",
+              fontFamily:
+                "ui-monospace, SFMono-Regular, 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', monospace",
             },
           }}
         >

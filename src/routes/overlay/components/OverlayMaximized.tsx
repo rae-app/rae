@@ -22,15 +22,15 @@ const OverlayMaximized: React.FC<OverlayMaximizedProps> = ({
         <div className={sharedClass} style={sharedStyle}>
           <h2 className="text-xl font-semibold mb-6">Settings</h2>
           <div className="space-y-4 max-w-4xl mx-auto">
-            <div className="p-4 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+            <div className="p-4 bg-stone-100 dark:bg-stone-800 rounded-lg">
               <h3 className="font-medium mb-2">Preferences</h3>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              <p className="text-sm text-stone-600 dark:text-stone-400">
                 Configure your app preferences here
               </p>
             </div>
-            <div className="p-4 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+            <div className="p-4 bg-stone-100 dark:bg-stone-800 rounded-lg">
               <h3 className="font-medium mb-2">Shortcuts</h3>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              <p className="text-sm text-stone-600 dark:text-stone-400">
                 Manage keyboard shortcuts
               </p>
             </div>
@@ -42,9 +42,9 @@ const OverlayMaximized: React.FC<OverlayMaximizedProps> = ({
         <div className={sharedClass} style={sharedStyle}>
           <h2 className="text-xl font-semibold mb-6">Notes</h2>
           <div className="space-y-4 max-w-4xl mx-auto">
-            <div className="p-4 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+            <div className="p-4 bg-stone-100 dark:bg-stone-800 rounded-lg">
               <h3 className="font-medium mb-2">Your Notes</h3>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              <p className="text-sm text-stone-600 dark:text-stone-400">
                 Access and manage your notes
               </p>
             </div>

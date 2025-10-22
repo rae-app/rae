@@ -55,9 +55,9 @@ export const SidebarButton = ({
         // paddingBlock: expanded ? "20px" : "0px",
       }}
       onClick={onClick}
-      className={`w-full shrink-0 group h-[44px]  flex items-center overflow-hidden rounded-lg dark:bg-zinc-800/20 cursor-pointer dark:hover:text-white ${
-        active && "dark:!bg-zinc-800 dark:!text-white"
-      } dark:hover:bg-zinc-800 transition-colors flex-nowrap whitespace-nowrap dark:text-zinc-400 font-medium duration-100`}
+      className={`w-full shrink-0 group h-[44px]  flex items-center overflow-hidden rounded-lg dark:bg-stone-800/20 cursor-pointer dark:hover:text-white ${
+        active && "dark:!bg-stone-800 dark:!text-white"
+      } dark:hover:bg-stone-800 transition-colors flex-nowrap whitespace-nowrap dark:text-stone-400 font-medium duration-100`}
     >
       <motion.div
         animate={{
@@ -133,13 +133,13 @@ const Sidebar = () => {
       <div className="w-full shrink-0 h-[56px] flex p-2 pb-1 justify-end overflow-hidden items-center">
         <motion.div
           animate={{ opacity: expanded ? 1 : 0 }}
-          className=" px-4  font-mono text-sm dark:text-zinc-700 font-black whitespace-nowrap pointer-events-none text-left w-full"
+          className=" px-4  font-mono text-sm dark:text-stone-700 font-black whitespace-nowrap pointer-events-none text-left w-full"
         >
           CTRL + B
         </motion.div>
         <button
           onClick={() => setExpanded((prev) => !prev)}
-          className="h-full shrink-0 aspect-square flex items-center justify-center dark:hover:bg-zinc-800 dark:text-zinc-400 hover:dark:text-white transition-colors duration-100 rounded-lg dark:bg-zinc-900/50"
+          className="h-full shrink-0 aspect-square flex items-center justify-center dark:hover:bg-stone-800 dark:text-stone-400 hover:dark:text-white transition-colors duration-100 rounded-lg dark:bg-stone-900/50"
         >
           <AnimatePresence>
             <motion.div
@@ -188,7 +188,7 @@ const Sidebar = () => {
               convoHistory.map((convo) => (
                 <div
                   key={convo.id}
-                  className={`dark:bg-zinc-900/0 ${currentConvoId == convo.id ? "dark:!bg-zinc-800 dark:!text-zinc-200" : ""} h-[32px] items-center shrink-0 whitespace-nowrap px-4 rounded-lg overflow-hidden dark:text-zinc-400 hover:dark:bg-zinc-800 transition-colors duration-100 cursor-pointer text-sm font-medium py-2 w-full`}
+                  className={`dark:bg-stone-900/0 ${currentConvoId == convo.id ? "dark:!bg-stone-800 dark:!text-stone-200" : ""} h-[32px] items-center shrink-0 whitespace-nowrap px-4 rounded-lg overflow-hidden dark:text-stone-400 hover:dark:bg-stone-800 transition-colors duration-100 cursor-pointer text-sm font-medium py-2 w-full`}
                   onClick={() => {
                     console.log("Selected chat:", convo.title);
                     console.log("Chat messages:", convo);
@@ -269,10 +269,10 @@ const Sidebar = () => {
         animate={{ height: expanded ? "70px" : "60px" }}
         className="w-full p-2"
       >
-        <button onClick={() => handlelogout()} className="rounded-lg overflow-hidden w-full h-full p-2 flex dark:hover:bg-zinc-800 transition-colors duration-100 cursor-pointer  dark:bg-zinc-800/20 dark:text-white gap-2">
+        <button onClick={() => handlelogout()} className="rounded-lg overflow-hidden w-full h-full p-2 flex dark:hover:bg-stone-800 transition-colors duration-100 cursor-pointer  dark:bg-stone-800/20 dark:text-white gap-2">
           <div className="h-full aspect-square shrink-0 rounded-full bg-surface"></div>
           <motion.div animate={{ opacity: expanded ? 1 : 0 }} className=" flex flex-col items-start">
-            <div className="text-sm font-medium dark:text-zinc-200 ">
+            <div className="text-sm font-medium dark:text-stone-200 ">
               {name}
             </div>
             <div className="text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-white to-transparent">

@@ -1,7 +1,9 @@
-{/*
+{
+  /*
   This is the chat history tab component.
   It is used to display the chat history.
-*/}
+*/
+}
 
 import React, { useRef, useLayoutEffect, useState } from "react";
 import { motion, useAnimation } from "framer-motion";
@@ -62,8 +64,8 @@ const ChatHistoryTab: React.FC<ChatHistoryTabProps> = React.memo(
         onClick={onClick}
         className={`px-3 py-2.5 group whitespace-nowrap overflow-hidden font-medium rounded-lg text-sm relative cursor-pointer transition-all duration-200 ${
           active
-            ? "bg-zinc-900 text-white shadow-sm border border-zinc-800"
-            : "bg-white text-zinc-700 hover:bg-zinc-100 border border-transparent hover:border-zinc-200"
+            ? "bg-stone-900 text-white shadow-sm border border-stone-800"
+            : "bg-white text-stone-700 hover:bg-stone-100 border border-transparent hover:border-stone-200"
         }`}
         style={{ maxWidth: "100%" }}
       >
@@ -77,8 +79,8 @@ const ChatHistoryTab: React.FC<ChatHistoryTabProps> = React.memo(
         <div
           className={`pointer-events-none absolute right-0 top-0 h-full w-1/3 bg-gradient-to-r from-transparent transition-colors ${
             active
-              ? "via-zinc-900 to-zinc-900"
-              : "via-white to-white group-hover:via-zinc-100 group-hover:to-zinc-100"
+              ? "via-stone-900 to-stone-900"
+              : "via-white to-white group-hover:via-stone-100 group-hover:to-stone-100"
           }`}
         ></div>
       </div>
