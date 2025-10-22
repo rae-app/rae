@@ -66,7 +66,10 @@ interface ChatViewProps {
   setAssistMessage?: (message: string) => void;
 }
 
-import CustomDropdown, { DropdownOption } from "./CustomDropdown";
+import {
+  CustomDropdown,
+  type DropdownOption,
+} from "@/components/app/ui/dropdown";
 import { set } from "zod";
 
 export const ChatView = ({

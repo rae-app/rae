@@ -30,7 +30,7 @@ export const OverlayButton = ({
         draggable ? "" : ""
       } h-full bg-transparent   outline-none  active:outline-2 active:outline-surface group-hover:dark:text-white dark:text-stone-400  flex items-center justify-center aspect-square shrink-0 rounded-lg transition-all duration-100   ${
         active
-          ? `dark:bg-surface/10  text-surface `
+          ? `dark:bg-surface/10  text-surface group-hover:bg-surface/20`
           : "group-hover:dark:bg-stone-900 "
       } ${className}`}
       title={title}

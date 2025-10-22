@@ -1,10 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
-import autosize from "autosize";
-import { ChevronDown, Send, Globe, Brain, Image, X } from "lucide-react";
 import Button from "@/components/ui/Button";
+import autosize from "autosize";
+import { Brain, ChevronDown, Globe, Image, Send } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-
-import { models } from "@/constants/models";
+import React, { useEffect, useRef, useState } from "react";
 
 interface ChatInputProps {
   onSend?: (msg: string, image?: string) => void;

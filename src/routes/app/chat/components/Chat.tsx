@@ -573,7 +573,7 @@ const Chat: React.FC<ChatProps> = ({
               animate={{ opacity: 1 }}
               className="text-3xl text-stone-200 font-semibold"
             >
-              Welcome Back {name?.split(" ")[0]}
+              Welcome Back, {name?.split(" ")[0]}
             </motion.div>
             <motion.div
               initial={{ width: "70%", height: "100px" }}

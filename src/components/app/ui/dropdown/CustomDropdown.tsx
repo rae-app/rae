@@ -12,7 +12,8 @@ export interface DropdownOption {
 interface CustomDropdownProps {
   isOpen: boolean;
   onClose: () => void;
-  options: DropdownOption[];
+  options?: DropdownOption[];
+  children?: ReactNode;
   className?: string;
   position?: "bottom-left" | "bottom-right" | "top-left" | "top-right";
   minWidth?: string;
@@ -23,6 +24,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   isOpen,
   onClose,
   options,
+  children,
   className = "",
   position = "bottom-left",
   minWidth = "160px",
@@ -88,35 +90,47 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
               onClick={(e) => e.stopPropagation()}
               className="h-fit p-1 flex flex-col gap-1"
             >
-              {options.map((option, index) => (
-                <button
-                  key={option.value || index}
-                  onClick={() => {
-                    option.onClick?.();
-                    onClose();
-                  }}
-                  className={`flex gap-2 text-sm w-full transition-colors duration-100 px-2 py-1 dark:text-stone-400 font-medium hover:dark:text-white hover:dark:bg-stone-900 ${
-                    option.active && "dark:!bg-surface dark:!text-white"
-                  } rounded-md items-center`}
-                >
-                  {option.icon}
-                  {option.label}
-                  {option.active && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="ml-auto"
-                      transition={{
-                        duration: 0.2,
-                        ease: "easeInOut",
-                        type: "tween",
+              {children
+                ? React.Children.map(children, (child) => {
+                    if (React.isValidElement(child)) {
+                      return React.cloneElement(child as any, {
+                        onClick: (...args: any[]) => {
+                          (child.props as any).onClick?.(...args);
+                          onClose();
+                        },
+                      });
+                    }
+                    return child;
+                  })
+                : options?.map((option, index) => (
+                    <button
+                      key={option.value || index}
+                      onClick={() => {
+                        option.onClick?.();
+                        onClose();
                       }}
+                      className={`flex gap-2 text-sm w-full transition-colors duration-100 px-2 py-1 dark:text-stone-400 font-medium hover:dark:text-white hover:dark:bg-stone-900 ${
+                        option.active && "dark:!bg-surface dark:!text-white"
+                      } rounded-md items-center`}
                     >
-                      <CheckIcon className="" weight="bold" />
-                    </motion.div>
-                  )}
-                </button>
-              ))}
+                      {option.icon}
+                      {option.label}
+                      {option.active && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="ml-auto"
+                          transition={{
+                            duration: 0.2,
+                            ease: "easeInOut",
+                            type: "tween",
+                          }}
+                        >
+                          <CheckIcon className="" weight="bold" />
+                        </motion.div>
+                      )}
+                    </button>
+                  ))}
             </div>
           </motion.div>
         )}
@@ -137,23 +151,35 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           style={{ minWidth }}
         >
           <div className="flex flex-col py-1">
-            {options.map((option, index) => (
-              <button
-                key={option.value || index}
-                className={`h-9 text-left px-3 text-sm transition-colors whitespace-nowrap dark:text-stone-300 hover:dark:text-white hover:dark:bg-stone-900 ${
-                  option.active ? "font-semibold dark:bg-stone-900" : ""
-                }`}
-                onClick={() => {
-                  option.onClick?.();
-                  onClose();
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  {option.icon}
-                  <span>{option.label}</span>
-                </div>
-              </button>
-            ))}
+            {children
+              ? React.Children.map(children, (child) => {
+                  if (React.isValidElement(child)) {
+                    return React.cloneElement(child as any, {
+                      onClick: (...args: any[]) => {
+                        (child.props as any).onClick?.(...args);
+                        onClose();
+                      },
+                    });
+                  }
+                  return child;
+                })
+              : options?.map((option, index) => (
+                  <button
+                    key={option.value || index}
+                    className={`h-9 text-left px-3 text-sm transition-colors whitespace-nowrap dark:text-stone-300 hover:dark:text-white hover:dark:bg-stone-900 ${
+                      option.active ? "font-semibold dark:bg-stone-900" : ""
+                    }`}
+                    onClick={() => {
+                      option.onClick?.();
+                      onClose();
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      {option.icon}
+                      <span>{option.label}</span>
+                    </div>
+                  </button>
+                ))}
           </div>
         </motion.div>
       )}

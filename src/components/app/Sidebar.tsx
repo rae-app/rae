@@ -185,22 +185,24 @@ const Sidebar = () => {
             className="flex flex-col gap-1 overflow-y-auto overflow-x-hidden relative w-full"
           >
             {Array.isArray(convoHistory) &&
-              convoHistory.map((convo) => (
-                <div
-                  key={convo.id}
-                  className={`dark:bg-stone-900/0 ${currentConvoId == convo.id ? "dark:!bg-stone-800 dark:!text-stone-200" : ""} h-[32px] items-center shrink-0 whitespace-nowrap px-4 rounded-lg overflow-hidden dark:text-stone-400 hover:dark:bg-stone-800 transition-colors duration-100 cursor-pointer text-sm font-medium py-2 w-full`}
-                  onClick={() => {
-                    console.log("Selected chat:", convo.title);
-                    console.log("Chat messages:", convo);
-                    setCurrentConvo(convo.id);
-                    navigate("/app/chat");
-                  }}
-                >
-                  {typeof convo.title == "string"
-                    ? convo.title
-                    : "Invalid title"}
-                </div>
-              ))}
+              convoHistory
+                .filter((convo) => convo.id !== -1) // Filter out placeholder conversations
+                .map((convo) => (
+                  <div
+                    key={convo.id}
+                    className={`dark:bg-stone-900/0 ${currentConvoId == convo.id ? "dark:!bg-stone-800 dark:!text-stone-200" : ""} h-[32px] items-center shrink-0 whitespace-nowrap px-4 rounded-lg overflow-hidden dark:text-stone-400 hover:dark:bg-stone-800 transition-colors duration-100 cursor-pointer text-sm font-medium py-2 w-full`}
+                    onClick={() => {
+                      console.log("Selected chat:", convo.title);
+                      console.log("Chat messages:", convo);
+                      setCurrentConvo(convo.id);
+                      navigate("/app/chat");
+                    }}
+                  >
+                    {typeof convo.title == "string"
+                      ? convo.title.slice(1, -1)
+                      : "Invalid title"}
+                  </div>
+                ))}
           </motion.div>
         </div>
       </div>
