@@ -1052,7 +1052,7 @@ const Overlay = () => {
         // Maximizing - show the main app
         emit("show_app", { show: true });
         handlePinClick();
-        resize(500, 580);
+        resize(500, 60);
       }
       return !current;
     });
