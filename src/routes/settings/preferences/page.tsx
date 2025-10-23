@@ -40,15 +40,23 @@ function ToggleRow({
         className={`relative inline-flex h-5 w-10 outline transition-none outline-border  items-center rounded-sm  overflow-hidden ${
           enabled
             ? "bg-foreground dark:bg-surface"
-            : "bg-foreground/20 hover:bg-foreground/30 "
+            : "bg-stone-800 hover:bg-stone-700 "
         }`}
         aria-pressed={enabled}
       >
         <motion.div
           initial={{ x: enabled ? "100%" : "0%" }}
           animate={{ x: enabled ? "100%" : "0%" }}
+          transition={{ duration: 0.3, ease: "circInOut" }}
           className="absolute rounded-sm z-50 left-0 h-full aspect-square bg-background flex items-center justify-center leading-0 text-center"
-        ></motion.div>
+        >
+          <motion.div
+            initial={{ opacity: enabled ? 1 : 0 }}
+            animate={{ opacity: enabled ? 1 : 0 }}
+            transition={{ duration: 0.1, ease: "circInOut" }}
+            className="size-full rounded-sm bg-gradient-to-r from-surface/20 to-transparent shadow-[inset_2px_0_1px_rgba(255,100,100,1)] "
+          ></motion.div>
+        </motion.div>
       </button>
     </div>
   );

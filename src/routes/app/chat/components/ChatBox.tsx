@@ -382,7 +382,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         )}
       </AnimatePresence>
 
-      <div className="p-4">
+      <div className="p-2">
         <div className="bg-stone-900/50 border border-border rounded-lg group focus-within:border-foreground/20">
           <div className="relative">
             {/* Tool indicator */}

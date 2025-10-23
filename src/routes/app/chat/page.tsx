@@ -577,8 +577,8 @@ export default function ChatWindow() {
                 <div className="flex-1 flex items-center justify-center min-h-[400px]">
                   <div className="text-center max-w-md">
                     <div className="mb-6">
-                      <h2 className="text-4xl font-bold text-foreground mb-2">
-                        Welcome Back, {name?.split(" ")[0] || "User"}!
+                      <h2 className="text-4xl font-light text-foreground mb-2">
+                        Welcome Back, {name?.split(" ")[0] || "User"}
                       </h2>
                     </div>
                   </div>

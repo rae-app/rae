@@ -1044,16 +1044,15 @@ const Overlay = () => {
   const handleMaximizeClick = () => {
     setIsMaximized((current) => {
       if (current == true) {
-        // handleCloseChatClick();
+        // Minimizing - hide the main app
         emit("show_app", { show: false });
         handlePinClick();
-        resize(500, 580);
-        // setShowChat(false)
+        resize(500, 60);
       } else {
-        // handleCloseChatClick();
+        // Maximizing - show the main app
         emit("show_app", { show: true });
         handlePinClick();
-        resize(500, 60);
+        resize(500, 580);
       }
       return !current;
     });

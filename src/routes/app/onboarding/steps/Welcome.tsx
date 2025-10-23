@@ -101,8 +101,8 @@ const Welcome: React.FC<WelcomeProps> = ({ onNext }) => {
           return;
         }
         console.log("Name update Success");
-        setUser({ name: name });
-        setLoggedIn(true);
+        setUser({ email, name: name });
+        // Don't set logged in yet - wait until onboarding is finished
         onNext("onboard");
       } catch (nameErr: any) {
         console.error("Name update Error:", nameErr);
