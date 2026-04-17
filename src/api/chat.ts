@@ -41,35 +41,19 @@ export const Generate = async ({
       normalizedImage = [''];
     }
 
-    if (normalizedImage.some(img => img !== '') || tool) {
-      // Normal axios request
-      res = await axios.post(`${BASE_URL}/generate/msg`, {
-        email,
-        message,
-        newConvo,
-        conversationId,
-        provider,
-        modelName,
-        image: normalizedImage,
-        tool,
-        files,
-      }, { headers: getAuthHeaders() });
-      return res.data;
-    } else {
-      // Handle the else case (you had an empty else block)
-      res = await axios.post(`${BASE_URL}/generate/msg`, {
-        email,
-        message,
-        newConvo,
-        conversationId,
-        provider,
-        modelName,
-        image: normalizedImage,
-        tool,
-        files,
-      }, { headers: getAuthHeaders() });
-      return res.data;
-    }
+    // Normal axios request
+    res = await axios.post(`${BASE_URL}/generate/msg`, {
+      email,
+      message,
+      newConvo,
+      conversationId,
+      provider,
+      modelName,
+      image: normalizedImage,
+      tool,
+      files,
+    }, { headers: getAuthHeaders() });
+    return res.data;
   } catch (err: any) {
     const message =
       err.response?.data || "Response Generation Failed. Try again later.";
